@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { Alert, Box, Button, Card, Stack, Tab, Tabs, TextField, Typography } from '@mui/material'
 import { api } from '../api/client'
-import { keys } from '../api/hooks'
+import { trocarSessao } from '../api/hooks'
 import { cores, fonteNome } from '../theme'
 import RamoOliveira from '../components/RamoOliveira'
 import { contaDemo, modoDemo } from '../demo/modo'
@@ -22,8 +22,7 @@ export default function EntrarPage() {
     try {
       if (criar) await api.cadastrar(email, senha)
       await api.entrar(email, senha)
-      qc.clear()
-      qc.setQueryData(keys.eu, await api.eu())
+      trocarSessao(qc, await api.eu())
     } catch (e) {
       setErro((e as Error).message)
     }

@@ -20,7 +20,7 @@ import EntrarPage from './pages/EntrarPage'
 import BoasVindasPage from './pages/BoasVindasPage'
 import { ouvirErros } from './lib/avisos'
 import { api } from './api/client'
-import { keys, useEnxoval, useEu } from './api/hooks'
+import { trocarSessao, useEnxoval, useEu } from './api/hooks'
 import RamoOliveira from './components/RamoOliveira'
 import Carregando from './components/Carregando'
 import { cores, fonteNome } from './theme'
@@ -53,8 +53,7 @@ function AppLogado() {
 
   const sair = async () => {
     await api.sair().catch(() => undefined)
-    qc.clear()
-    qc.setQueryData(keys.eu, null)
+    trocarSessao(qc, null)
   }
 
   if (!enxoval.data) return <Carregando erro={enxoval.error} />
