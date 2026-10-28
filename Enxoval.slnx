@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Enxoval.Api/Enxoval.Api.csproj" />
+    <Project Path="src/Enxoval.Domain/Enxoval.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Enxoval.UnitTests/Enxoval.UnitTests.csproj" />
+  </Folder>
+</Solution>
