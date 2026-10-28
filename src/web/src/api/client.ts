@@ -19,7 +19,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     method,
     headers: body && !formulario ? { 'Content-Type': 'application/json' } : undefined,
     body: formulario ? body : body ? JSON.stringify(body) : undefined,
-  })
+  }).catch(() => { throw new ApiError('Não foi possível conectar ao servidor. Verifique a internet e tente de novo.', 0) })
   if (!res.ok) {
     // ProblemDetails: códigos de validação (ex.: PasswordTooShort) viram mensagens em português.
     const problem = await res.json().catch(() => null)

@@ -3,6 +3,9 @@
 Aplicativo web para casais planejarem e acompanharem o enxoval do bebê: o que precisa, o que já foi comprado ou
 ganhado, quanto custou e quanto falta.
 
+**Demonstração:** https://baby-layette-app.vercel.app — clique em "Entrar na demonstração" (os dados ficam só no
+seu navegador).
+
 <p align="center">
   <img src="docs/imagens/painel.png" alt="Painel" width="260" />
   <img src="docs/imagens/itens.png" alt="Lista de itens" width="260" />

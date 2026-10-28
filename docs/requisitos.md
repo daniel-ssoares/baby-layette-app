@@ -37,6 +37,9 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 - **RF26** — Modo loja (aba Loja): só o que falta e está na estação, por categoria, essenciais primeiro, com total
   estimado do que falta; busca, filtro "Essenciais" e toque no item para registrar a compra (RF25).
 
+- **RF27** — Versão de demonstração publicada (sem servidor): mesmas telas e regras, dados só no navegador,
+  conta de exemplo com um clique; exportação baixa arquivos de exemplo.
+
 ### Enxoval
 - **RF05** — Dados do enxoval: nome do bebê, sexo, data prevista do parto e orçamento total (todos opcionais).
   O painel mostra a idade gestacional (semanas + dias) e os dias até o parto.

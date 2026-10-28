@@ -6,6 +6,7 @@ import { api } from '../api/client'
 import { keys } from '../api/hooks'
 import { cores, fonteNome } from '../theme'
 import RamoOliveira from '../components/RamoOliveira'
+import { contaDemo, modoDemo } from '../demo/modo'
 
 interface Campos { email: string; senha: string; confirmacao: string }
 
@@ -16,10 +17,10 @@ export default function EntrarPage() {
   const [erro, setErro] = useState<string | null>(null)
   const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<Campos>()
 
-  const enviar = async ({ email, senha }: Campos) => {
+  const enviar = async ({ email, senha }: Pick<Campos, 'email' | 'senha'>, criar = modo === 'criar') => {
     setErro(null)
     try {
-      if (modo === 'criar') await api.cadastrar(email, senha)
+      if (criar) await api.cadastrar(email, senha)
       await api.entrar(email, senha)
       qc.clear()
       qc.setQueryData(keys.eu, await api.eu())
@@ -42,12 +43,21 @@ export default function EntrarPage() {
           <Typography color="text.secondary" align="center">A lista do bebê, organizada a dois.</Typography>
         </Stack>
 
+        {modoDemo && (
+          <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: cores.olivaClara, color: 'text.primary', '& .MuiAlert-message': { width: '100%' } }}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              <b>Versão de demonstração.</b> Os dados ficam só neste navegador. Entre na conta de exemplo ou crie a sua.
+            </Typography>
+            <Button fullWidth variant="contained" onClick={() => enviar(contaDemo, false)}>Entrar na demonstração</Button>
+          </Alert>
+        )}
+
         <Tabs value={modo} onChange={(_, v) => { setModo(v); setErro(null) }} variant="fullWidth" sx={{ mb: 2 }}>
           <Tab value="entrar" label="Entrar" />
           <Tab value="criar" label="Criar conta" />
         </Tabs>
 
-        <form onSubmit={handleSubmit(enviar)} noValidate>
+        <form onSubmit={handleSubmit(d => enviar(d))} noValidate>
           <Stack spacing={2}>
             <TextField label="E-mail" type="email" autoComplete="email" autoFocus
               {...register('email', { required: 'Informe o e-mail.', pattern: { value: /^\S+@\S+\.\S+$/, message: 'E-mail inválido.' } })}

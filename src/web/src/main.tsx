@@ -8,6 +8,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material'
 import App from './App'
 import { avisarErro } from './lib/avisos'
 import { theme } from './theme'
+import { modoDemo } from './demo/modo'
 
 // Sessão expirada (401) em qualquer chamada: volta para a tela de entrada.
 const tratarErro = (e: Error) => {
@@ -21,7 +22,7 @@ const queryClient: QueryClient = new QueryClient({
   mutationCache: new MutationCache({ onError: e => { if (tratarErro(e)) avisarErro(e.message) } }),
 })
 
-createRoot(document.getElementById('root')!).render(
+const renderizar = () => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
@@ -33,3 +34,7 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+// Demonstração: a "API" roda no navegador (carregada só nesse build).
+if (modoDemo) import('./demo/servidor').then(m => { m.instalar(); renderizar() })
+else renderizar()

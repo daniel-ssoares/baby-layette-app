@@ -25,6 +25,7 @@ import RamoOliveira from './components/RamoOliveira'
 import Carregando from './components/Carregando'
 import { cores, fonteNome } from './theme'
 import { preposicaoBebe } from './lib/format'
+import { modoDemo } from './demo/modo'
 
 /** Guarda de sessão: sem conta logada, mostra a tela de entrada. */
 export default function App() {
@@ -100,6 +101,11 @@ function AppLogado() {
         </Container>
       </Box>
 
+      {modoDemo && (
+        <Typography variant="caption" component="p" align="center" sx={{ bgcolor: cores.olivaClara, color: 'primary.dark', py: 0.5, px: 2 }}>
+          Demonstração: as alterações ficam salvas só neste navegador.
+        </Typography>
+      )}
       <Container maxWidth="md" sx={{ py: 3 }}>
         <Routes>
           <Route path="/" element={<Navigate to="/painel" replace />} />

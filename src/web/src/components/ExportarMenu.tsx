@@ -3,12 +3,16 @@ import { Button, Divider, FormControlLabel, ListItemIcon, ListItemText, Menu, Me
 import DownloadIcon from '@mui/icons-material/FileDownloadOutlined'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import TableChartIcon from '@mui/icons-material/TableChartOutlined'
+import { modoDemo } from '../demo/modo'
 
 /** T4: baixa a lista de compras (só o que falta) ou a lista completa, em PDF ou Excel. */
 export default function ExportarMenu() {
   const [ancora, setAncora] = useState<HTMLElement | null>(null)
   const [completa, setCompleta] = useState(false)
-  const url = (formato: 'pdf' | 'xlsx') => `/api/exportar/compras.${formato}${completa ? '?todos=true' : ''}`
+  // Na demonstração não há API: baixa um exemplo gerado a partir da conta demo.
+  const url = (formato: 'pdf' | 'xlsx') => modoDemo
+    ? `/demo/lista-de-compras${completa ? '-completa' : ''}.${formato}`
+    : `/api/exportar/compras.${formato}${completa ? '?todos=true' : ''}`
 
   return (
     <>
@@ -20,11 +24,11 @@ export default function ExportarMenu() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
         <MenuItem component="a" href={url('pdf')} download onClick={() => setAncora(null)}>
           <ListItemIcon><PictureAsPdfIcon fontSize="small" /></ListItemIcon>
-          <ListItemText primary="PDF" secondary="Para imprimir e levar às compras" />
+          <ListItemText primary="PDF" secondary={modoDemo ? 'Exemplo da conta demonstração' : 'Para imprimir e levar às compras'} />
         </MenuItem>
         <MenuItem component="a" href={url('xlsx')} download onClick={() => setAncora(null)}>
           <ListItemIcon><TableChartIcon fontSize="small" /></ListItemIcon>
-          <ListItemText primary="Excel" secondary="Planilha com filtros e totais" />
+          <ListItemText primary="Excel" secondary={modoDemo ? 'Exemplo da conta demonstração' : 'Planilha com filtros e totais'} />
         </MenuItem>
         <Divider />
         <MenuItem disableRipple sx={{ '&:hover': { bgcolor: 'transparent' } }}>
