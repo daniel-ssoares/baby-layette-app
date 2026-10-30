@@ -1,18 +1,13 @@
 import type {
-  AtualizarEnxoval, BoasVindas, Categoria, Conta, Enxoval, Item, Local, Painel, RegistrarCompra, SalvarCategoria, SalvarItem,
-  TemaVisual,
+  AtualizarEnxoval, BoasVindas, Categoria, Conta, Enxoval, Item, Local, Membro, Painel, RegistrarCompra, SalvarCategoria,
+  SalvarItem, TemaVisual,
 } from './types'
 import { mensagemDeErro } from '../lib/erros'
+import { ApiError } from './erro'
+import { modoDemo } from '../demo/modo'
+import { apiNuvem } from '../nuvem/api'
 
-export class ApiError extends Error {
-  readonly status: number
-  readonly codigos: string[]
-  constructor(message: string, status: number, codigos: string[] = []) {
-    super(message)
-    this.status = status
-    this.codigos = codigos
-  }
-}
+export { ApiError }
 
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   const formulario = body instanceof FormData
@@ -32,7 +27,8 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
   return (texto ? JSON.parse(texto) : undefined) as T
 }
 
-export const api = {
+/** Chamadas HTTP em /api/*: na demonstração quem responde é demo/servidor.ts (no navegador). */
+export const apiHttp = {
   // Conta (Identity em /api/auth)
   eu: () => request<Conta>('GET', '/auth/manage/info').catch(e => {
     if (e instanceof ApiError && e.status === 401) return null
@@ -43,6 +39,11 @@ export const api = {
   sair: () => request<void>('POST', '/auth/sair'),
   trocarSenha: (oldPassword: string, newPassword: string) =>
     request<void>('POST', '/auth/manage/info', { oldPassword, newPassword }),
+  esqueciSenha: (email: string) => request<void>('POST', '/auth/forgotPassword', { email }),
+  redefinirSenha: (novaSenha: string) => request<void>('POST', '/auth/redefinir', { novaSenha }),
+  membros: () => request<Membro[]>('GET', '/membros'),
+  criarConvite: () => request<string>('POST', '/convites'),
+  aceitarConvite: (codigo: string) => request<void>('POST', `/convites/${encodeURIComponent(codigo)}/aceitar`),
 
   enxoval: () => request<Enxoval>('GET', '/enxoval'),
   atualizarEnxoval: (d: AtualizarEnxoval) => request<void>('PUT', '/enxoval', d),
@@ -72,3 +73,8 @@ export const api = {
   painel: () => request<Painel>('GET', '/painel'),
   buscarLocais: (q: string) => request<Local[]>('GET', `/localizacao?q=${encodeURIComponent(q)}`),
 }
+
+export type Api = typeof apiHttp
+
+/** Back-end do app: Supabase; na demonstração, o servidor simulado no navegador. */
+export const api: Api = modoDemo ? apiHttp : apiNuvem

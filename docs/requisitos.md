@@ -4,7 +4,8 @@
 
 Aplicação web para um casal planejar e acompanhar o enxoval do bebê: o que precisa, o que já foi comprado ou ganho, quanto custou e quanto falta.
 
-**Escopo atual:** cada casal com sua conta, apenas web, execução local. Sem lista de presentes para convidados.
+**Escopo atual:** web (PWA), dados no Supabase; cada pessoa com o próprio login e o casal compartilhando um enxoval.
+Sem lista de presentes para convidados.
 
 O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxoval.md](lista-enxoval.md).
 
@@ -12,22 +13,26 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 
 | Perfil | Descrição |
 |---|---|
-| Casal | Uma única conta compartilhada pelo casal, com acesso total ao enxoval. |
+| Pessoa do casal | Login próprio (e-mail e senha). Participa de um enxoval; o casal entra no mesmo enxoval por convite, com acesso total. |
 
 ## 3. Requisitos funcionais — MVP
 
 ### Conta e acesso (fase 2 — ver `docs/tarefas.md`)
-- **RF01** — Cadastro de uma conta com e-mail e senha (≥ 8 caracteres), compartilhada pelo casal.
-- **RF02** — Login e logout; sessão por cookie (30 dias, renovável), em vários dispositivos ao mesmo tempo.
-- **RF03** — No primeiro acesso da conta o enxoval é criado com a lista-padrão. O enxoval criado antes do login
-  existir é atribuído à primeira conta.
-- **RF04** — Alterar a senha da conta.
+- **RF01** — Cadastro com e-mail e senha (≥ 8 caracteres), uma conta por pessoa (Supabase Auth).
+- **RF02** — Login e logout; sessão renovada automaticamente, em vários dispositivos ao mesmo tempo.
+- **RF03** — No primeiro acesso o enxoval é criado com a lista-padrão — exceto quem chega por convite, que entra
+  direto no enxoval de quem convidou.
+- **RF04** — Alterar a senha (pede a atual) e "Esqueci minha senha" (link por e-mail para criar uma nova).
+- **RF31** — Convite do casal: na aba do bebê ("Quem participa"), gerar um link/código de uso único, válido por 7 dias.
+  Quem abre o link cria a conta (ou entra) e passa a ver e editar o mesmo enxoval. Quem já tinha um enxoval só seu é
+  avisado de que ele será apagado ao aceitar. A lista mostra os e-mails de quem participa.
 - **RF21** — Boas-vindas após o primeiro acesso: nome do bebê e data prevista, ambos opcionais ("Ainda não escolhemos o nome").
 
 ### Fotos e exportação (fase 2)
 - **RF22** — Foto por item (JPEG/PNG/WebP, até 5 MB; o navegador reduz para ≤ 1600px antes de enviar), com
-  miniatura na lista. Arquivos em `src/Enxoval.Api/dados/fotos/`, servidos só para a conta dona.
-- **RF23** — Exportar a lista de compras (o que falta, dentro da estação) ou a lista completa, em PDF ou Excel.
+  miniatura na lista. Arquivos no Supabase Storage (bucket privado), visíveis só para quem participa do enxoval.
+- **RF23** — Exportar a lista de compras (o que falta, dentro da estação) ou a lista completa, em PDF ou Excel,
+  gerados no navegador nas cores do tema.
 
 ### Celular e compras (fase 3)
 - **RF24** — Acesso pelo celular na rede de casa (`npm run dev:celular`) e atalho na tela inicial com o ícone do app.
@@ -39,8 +44,8 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 - **RF26** — Modo loja (aba Loja): só o que falta e está na estação, por categoria, essenciais primeiro, com total
   estimado do que falta; busca, filtro "Essenciais" e toque no item para registrar a compra (RF25).
 
-- **RF27** — Versão de demonstração publicada (sem servidor): mesmas telas e regras, dados só no navegador,
-  conta de exemplo com um clique; exportação baixa arquivos de exemplo.
+- **RF27** — Demonstração no próprio site ("Só quero conhecer" na entrada): mesmas telas e regras, dados só no
+  navegador, conta de exemplo com um clique; "Usar conta de verdade" volta para o login real.
 
 ### Aparência
 - **RF29** — Temas visuais: 8 temas (menina: Cerejeira, Lavanda, Pêssego, Jardim; menino: Céu, Oceano, Ursinho;

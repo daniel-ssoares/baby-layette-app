@@ -8,6 +8,7 @@ export const keys = {
   categorias: ['categorias'],
   itens: ['itens'],
   painel: ['painel'],
+  membros: ['membros'],
 }
 
 /** Conta logada; `null` quando não há sessão. */
@@ -17,6 +18,7 @@ export const useEnxoval = (ativo = true) => useQuery({ queryKey: keys.enxoval, q
 export const useCategorias = () => useQuery({ queryKey: keys.categorias, queryFn: api.categorias })
 export const useItens = () => useQuery({ queryKey: keys.itens, queryFn: api.itens })
 export const usePainel = () => useQuery({ queryKey: keys.painel, queryFn: api.painel })
+export const useMembros = () => useQuery({ queryKey: keys.membros, queryFn: api.membros })
 
 /**
  * Login/logout: descarta os dados da conta anterior e avisa a guarda de sessão (`useEu`).

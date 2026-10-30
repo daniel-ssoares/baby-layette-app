@@ -3,8 +3,8 @@
 Aplicativo web para casais planejarem e acompanharem o enxoval do bebê: o que precisa, o que já foi comprado ou
 ganhado, quanto custou e quanto falta.
 
-**Demonstração:** https://baby-layette-app.vercel.app — clique em "Entrar na demonstração" (os dados ficam só no
-seu navegador).
+**Site:** https://baby-layette-app.vercel.app — crie sua conta, ou clique em "Só quero conhecer: ver a demonstração"
+(os dados da demonstração ficam só no seu navegador).
 
 <p align="center">
   <img src="docs/imagens/painel.png" alt="Painel" width="260" />
@@ -14,8 +14,9 @@ seu navegador).
 
 ## Funcionalidades
 
-- **Conta do casal:** uma conta compartilhada, com acesso em vários dispositivos.
-- **Lista pronta para começar:** cerca de 85 itens em 9 categorias (Quarto, Roupas, Banho, Higiene, Farmácia,
+- **Conta para cada pessoa, enxoval do casal:** cada um entra com o próprio e-mail e senha; um convite (link ou
+  código) coloca a outra pessoa no mesmo enxoval. Funciona em vários aparelhos ao mesmo tempo.
+- **Lista pronta para começar:** cerca de 90 itens em 9 categorias (Quarto, Roupas, Banho, Higiene, Farmácia,
   Amamentação, Passeio, Mala da Maternidade e Acessórios), com quantidades, tamanhos e preços estimados, tudo editável.
 - **Painel:** progresso geral e por categoria, semanas de gestação, contagem até o parto, valor estimado, gasto e saldo
   do orçamento.
@@ -25,85 +26,54 @@ seu navegador).
 - **Registro de compras:** quantidade, valor pago e se o item foi comprado ou ganhado de presente.
 - **Fotos dos itens:** tire pela câmera do celular ou escolha da galeria.
 - **Exportação:** lista de compras em PDF ou Excel.
+- **8 temas e modo escuro:** temas para menina, menino e neutro, escolhidos nas boas-vindas.
+- **App no celular (PWA):** instalável no Android e no iPhone.
 
 ## Tecnologias
 
-- **Back-end:** .NET 10, ASP.NET Core (Minimal APIs), Entity Framework Core, SQLite, ASP.NET Core Identity
 - **Front-end:** React 19, TypeScript, Vite, Material UI, TanStack Query, React Hook Form
-- **Testes:** xUnit, Vitest e Testing Library
+- **Back-end:** [Supabase](https://supabase.com) (Auth, Postgres com Row Level Security, Storage) — sem servidor próprio
+- **Exportação:** jsPDF e ExcelJS, no navegador
+- **Testes:** Vitest e Testing Library
 
-## Pré-requisitos
-
-- [.NET SDK 10](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) 24 ou mais recente
+A versão anterior, com API própria em .NET, está guardada em [legado/](legado/README.md).
 
 ## Como executar
 
-Clone o repositório e instale as dependências do front-end:
+Pré-requisito: [Node.js](https://nodejs.org/) 24 ou mais recente.
 
 ```bash
 git clone https://github.com/daniel-ssoares/baby-layette-app.git
 cd baby-layette-app
 npm --prefix src/web install
+npm --prefix src/web run dev        # http://localhost:5173
 ```
 
-Em dois terminais, na raiz do projeto:
+O front usa o projeto Supabase configurado em `src/web/.env`. Para usar outro projeto, siga
+[supabase/LEIAME.md](supabase/LEIAME.md) (rodar os scripts SQL e copiar a URL e a chave publicável).
 
-```bash
-# Terminal 1: API (http://localhost:5111)
-dotnet run --project src/Enxoval.Api
-
-# Terminal 2: front-end (http://localhost:5173)
-npm --prefix src/web run dev
-```
-
-Acesse **http://localhost:5173** e crie a conta do casal. O banco de dados é criado automaticamente na primeira
-execução.
-
-### Conta de demonstração
-
-Em ambiente de desenvolvimento, uma conta com dados fictícios é criada automaticamente:
-
-| E-mail | Senha |
-|---|---|
-| `demo@enxoval.local` | `demo1234` |
+Sem configurar nada, o botão **"Só quero conhecer: ver a demonstração"** funciona com dados fictícios guardados no
+navegador (conta `demo@enxoval.local` / `demo1234`).
 
 ### Usar no celular
 
-Para abrir o app no celular, na mesma rede Wi-Fi, inicie o front-end com:
-
-```bash
-npm --prefix src/web run dev:celular
-```
-
-Depois acesse `http://<ip-do-computador>:5173` no celular. No menu do navegador, a opção "Adicionar à tela inicial"
-cria um atalho com o ícone do app.
+Na mesma rede Wi-Fi: `npm --prefix src/web run dev:celular` e acesse `http://<ip-do-computador>:5173`.
 
 O site publicado é um PWA: no Android aparece o botão **Instalar**; no iPhone, use Compartilhar → **Adicionar à Tela
 de Início**. Ele abre em tela cheia e funciona mesmo com internet ruim.
 
-### Hospedar
-
-A API roda em Docker (`Dockerfile`, com volume em `/dados`) e há um `fly.toml` pronto para o Fly.io. O passo a passo,
-incluindo como ligar o front da Vercel à API, está em [docs/hospedagem.md](docs/hospedagem.md).
-
 ## Testes
 
 ```bash
-dotnet test Enxoval.slnx          # back-end
-npm --prefix src/web test         # front-end
+npm --prefix src/web test           # Vitest
+npm --prefix src/web run build      # checagem de tipos + build
 ```
 
 ## Estrutura do projeto
 
 ```
-src/
-  Enxoval.Domain/     Entidades e regras de negócio
-  Enxoval.Api/        API REST, banco de dados e exportação PDF/Excel
-  web/                Front-end React
-tests/
-  Enxoval.UnitTests/  Testes das regras de negócio
-docs/                 Requisitos e lista-padrão do enxoval
+src/web/            Front-end React (app inteiro: telas, regras, acesso ao Supabase)
+supabase/           Esquema do banco, regras de acesso (RLS) e lista-padrão, em SQL
+docs/               Requisitos e lista-padrão do enxoval
+legado/             API .NET anterior (guardada, não usada)
 ```
-
-A documentação da API (OpenAPI/Scalar) fica em http://localhost:5111/scalar durante o desenvolvimento.

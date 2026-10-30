@@ -1,7 +1,7 @@
 ﻿# Testes manuais/smoke da API e screenshots, sem mexer no banco real nem na API que estiver aberta.
 # Uso (PowerShell, na raiz do repo; o arquivo tem BOM para o PS 5.1 ler UTF-8):
-#   dotnet build src/Enxoval.Api -c Release
-#   . .\scripts\teste-api.ps1; Iniciar-Api; $s = Entrar ...; Req GET '/api/itens' $null $s; Parar-Api
+#   dotnet build legado/src/Enxoval.Api -c Release
+#   . .\legado\scripts\teste-api.ps1; Iniciar-Api; $s = Entrar ...; Req GET '/api/itens' $null $s; Parar-Api
 # Sobe a API (build Release) numa cópia do banco real, na porta 5211; o front de teste fica na 5273.
 $Scratch = Join-Path $env:TEMP 'enxoval-teste'; New-Item -ItemType Directory -Force $Scratch | Out-Null
 $Base = 'http://localhost:5211'
@@ -9,9 +9,9 @@ $Base = 'http://localhost:5211'
 function Iniciar-Api {
   # Um copia.db-wal de execução interrompida seria reaplicado sobre a cópia nova.
   Get-ChildItem $Scratch -Filter 'copia.db*' | ForEach-Object { [IO.File]::Delete($_.FullName) }
-  Copy-Item C:\dev\baby-layette-app\src\Enxoval.Api\enxoval.db "$Scratch\copia.db" -Force
+  Copy-Item C:\dev\baby-layette-app\legado\src\Enxoval.Api\enxoval.db "$Scratch\copia.db" -Force
   $env:ConnectionStrings__Enxoval = "Data Source=$Scratch\copia.db"; $env:ASPNETCORE_URLS = $Base; $env:ASPNETCORE_ENVIRONMENT = 'Development'
-  $bin = 'C:\dev\baby-layette-app\src\Enxoval.Api\bin\Release\net10.0'
+  $bin = 'C:\dev\baby-layette-app\legado\src\Enxoval.Api\bin\Release\net10.0'
   $script:ApiProc = Start-Process "$bin\Enxoval.Api.exe" -WorkingDirectory $bin -PassThru -WindowStyle Hidden -RedirectStandardError "$Scratch\api.err" -RedirectStandardOutput "$Scratch\api.log"
   for ($i = 0; $i -lt 30; $i++) { try { Invoke-WebRequest "$Base/openapi/v1.json" -UseBasicParsing -ErrorAction Stop | Out-Null; return } catch { Start-Sleep 1 } }
   Get-Content "$Scratch\api.err" -Tail 20; throw 'API não subiu'

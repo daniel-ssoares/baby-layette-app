@@ -1,13 +1,13 @@
 // Modo demonstração (VITE_DEMO=true): substitui a API interceptando fetch('/api/...') no navegador.
-// Reproduz as rotas de src/Enxoval.Api/Endpoints.cs e AuthEndpoints.cs; os dados ficam no localStorage.
-import type { Local, PerfilClima, SexoBebe, TemaVisual } from '../api/types'
+// Reproduz as rotas da antiga API .NET (legado/), que apiHttp (api/client.ts) chama; os dados ficam no localStorage.
+import type { SexoBebe, TemaVisual } from '../api/types'
+import { buscarLocais, perfilClima } from '../lib/clima'
 import dados from './dados.json'
 import { contaDemo } from './modo'
 import { temasDisponiveis, todosOsTemas } from '../temas/paletas'
 import {
-  analisarClima, painel, paraDto, registrarCompra,
-  type CategoriaSalva, type EnxovalSalvo, type ItemSalvo, type TemperaturaDiaria,
-} from './dominio'
+  painel, paraDto, registrarCompra, type CategoriaSalva, type EnxovalSalvo, type ItemSalvo,
+} from '../lib/dominio'
 
 interface Conta {
   senha: string
@@ -84,41 +84,6 @@ const naoEncontrado = () => resposta(404, { status: 404, detail: 'Não encontrad
 const naoAutorizado = () => resposta(401, { status: 401, detail: 'Failed' })
 const limpar = (s: unknown) => (typeof s === 'string' && s.trim() ? s.trim() : null)
 
-// ---- Clima (Open-Meteo direto do navegador; ClimaService.cs) ----
-const historicos = new Map<string, Promise<TemperaturaDiaria[] | null>>()
-
-function historico(lat: number, lon: number) {
-  const chave = `${lat.toFixed(2)}:${lon.toFixed(2)}`
-  if (!historicos.has(chave)) {
-    const ultimoAno = new Date().getFullYear() - 1
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}` +
-      `&start_date=${ultimoAno - 4}-01-01&end_date=${ultimoAno}-12-31&daily=temperature_2m_mean,temperature_2m_min&timezone=auto`
-    historicos.set(chave, fetchOriginal(url).then(r => (r.ok ? r.json() : null)).then(j => {
-      const d = j?.daily
-      if (!d) return null
-      return (d.time as string[]).map((dia, k) => ({ dia, media: d.temperature_2m_mean[k], minima: d.temperature_2m_min[k] }))
-        .filter(t => t.media != null && t.minima != null)
-    }).catch(() => null))
-  }
-  return historicos.get(chave)!
-}
-
-async function perfilClima(e: EnxovalSalvo): Promise<PerfilClima | null> {
-  if (e.latitude == null || e.longitude == null || !e.dataPrevistaParto) return null
-  const h = await historico(e.latitude, e.longitude)
-  return h?.length ? analisarClima(e.cidade, e.latitude, e.dataPrevistaParto, h) : null
-}
-
-async function buscarLocais(q: string): Promise<Local[]> {
-  if (q.trim().length < 2) return []
-  try {
-    const r = await fetchOriginal(`https://geocoding-api.open-meteo.com/v1/search?count=6&language=pt&format=json&name=${encodeURIComponent(q.trim())}`)
-    const j = await r.json()
-    return (j.results ?? []).map((l: { name: string; admin1?: string; country?: string; latitude: number; longitude: number }) =>
-      ({ nome: l.name, estado: l.admin1 ?? null, pais: l.country ?? null, latitude: l.latitude, longitude: l.longitude }))
-  } catch { return [] }
-}
-
 // ---- Validação (Validacao.cs) ----
 type Corpo = Record<string, unknown>
 const num = (v: unknown) => (typeof v === 'number' ? v : null)
@@ -167,6 +132,8 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
     salvar()
     return ok()
   }
+  if (rota === 'POST /auth/forgotPassword' || rota === 'POST /auth/redefinir')
+    return validacao({ demo: ['Na demonstração não há e-mail: crie uma conta de verdade para recuperar a senha.'] })
   if (rota === 'POST /auth/login') {
     const email = String(corpo.email ?? '').trim().toLowerCase()
     if (banco.contas[email]?.senha !== corpo.password) return naoAutorizado()
@@ -225,6 +192,11 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
     salvar()
     return ok()
   }
+
+  // Casal: na demonstração cada conta é de uma pessoa só.
+  if (rota === 'GET /membros') return ok([{ email: banco.logado, entrouEm: agora(), eu: true }])
+  if (rota === 'POST /convites' || /^POST \/convites\/[^/]+\/aceitar$/.test(rota))
+    return validacao({ demo: ['Convites funcionam só com conta de verdade (fora da demonstração).'] })
 
   // Categorias
   if (rota === 'GET /categorias')

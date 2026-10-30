@@ -1,5 +1,5 @@
-// Modo demonstração: cópia em TypeScript das regras do Enxoval.Domain (Entities.cs, Painel.cs, AnaliseClima.cs).
-// Ao mudar uma regra no Domain, mudar aqui também.
+// Regras de negócio do app (status, painel, clima, compra). Vieram do Enxoval.Domain (C#, guardado em legado/).
+// Usadas pelo app (nuvem/api.ts, Supabase) e pela demonstração (demo/servidor.ts).
 import type { Categoria, Clima, Estacao, Item, OrigemItem, Painel, PerfilClima, Prioridade, SexoBebe, TemaVisual } from '../api/types'
 
 export interface ItemSalvo {

@@ -1,9 +1,9 @@
 // Service worker do app instalado (PWA). Registrado só no build de produção (main.tsx).
 // - Páginas: rede primeiro; sem internet, a última versão salva (o app abre em vez de ficar em branco).
 // - /assets/* (nome com hash, nunca muda): cache primeiro.
-// - Ícones, manifest e exemplos da demo: cache, atualizado em segundo plano.
-// - /api nunca é guardado (dados sempre do servidor; login por cookie).
-const CACHE = 'enxoval-v2'
+// - Ícones e manifest: cache, atualizado em segundo plano.
+// - Dados (Supabase, outro domínio) e /api nunca passam por aqui: sempre do servidor.
+const CACHE = 'enxoval-v3'
 const MAX_ASSETS = 80
 
 // Na instalação guarda a página e os /assets/ que ela referencia: a 1ª visita já carregou o JS antes

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { analisarClima, estacaoEm, gestacao, painel, registrarCompra, type ItemSalvo } from './dominio'
 
-// Mesmos casos de tests/Enxoval.UnitTests, para a cópia do modo demo não divergir do Domain.
+// Mesmos casos dos testes xUnit do antigo Domain em C# (legado/).
 const item = (p: Partial<ItemSalvo>): ItemSalvo => ({
   id: 1, categoriaId: 1, nome: 'Item', tamanho: null, qtdDesejada: 1, qtdAdquirida: 0, prioridade: 'Media', clima: 'Todos',
   precoUnitarioEstimado: null, valorPago: null, origem: null, lojaLink: null, observacoes: null, fotoUrl: null, atualizadoEm: '', ...p,

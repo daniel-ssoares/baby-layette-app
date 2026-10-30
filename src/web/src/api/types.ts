@@ -1,4 +1,4 @@
-// Espelho dos contratos de src/Enxoval.Api/Contracts.cs — manter em sincronia.
+// Formato dos dados trocados com o back-end (Supabase em nuvem/api.ts; demonstração em demo/servidor.ts).
 
 export type Prioridade = 'Alta' | 'Media' | 'Baixa'
 export type StatusItem = 'Pendente' | 'Parcial' | 'Concluido'
@@ -10,6 +10,13 @@ export type TemaVisual = 'Oliveira' | 'Cerejeira' | 'Lavanda' | 'Pessego' | 'Jar
 
 export interface Conta {
   email: string
+}
+
+/** Pessoa que participa do enxoval (o casal entra por convite). */
+export interface Membro {
+  email: string
+  entrouEm: string
+  eu: boolean
 }
 
 export interface Enxoval {

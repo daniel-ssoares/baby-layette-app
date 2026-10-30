@@ -5,7 +5,7 @@ import { useAcao, useEu } from '../api/hooks'
 
 interface Campos { atual: string; nova: string }
 
-/** T1 (RF04): dados da conta do casal e troca de senha. */
+/** T1 (RF04): conta de quem está logado e troca de senha. */
 export default function TrocarSenha() {
   const eu = useEu()
   const trocar = useAcao(({ atual, nova }: Campos) => api.trocarSenha(atual, nova))

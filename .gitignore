@@ -5,6 +5,8 @@
 
 # dotenv files
 .env
+# Front: só a URL e a chave publicável do Supabase (públicas; quem protege os dados é o RLS)
+!src/web/.env
 
 # User-specific files
 *.rsuser

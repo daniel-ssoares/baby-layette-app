@@ -18,6 +18,9 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import { useQueryClient } from '@tanstack/react-query'
 import EntrarPage from './pages/EntrarPage'
 import BoasVindasPage from './pages/BoasVindasPage'
+import RedefinirSenhaPage from './pages/RedefinirSenhaPage'
+import AceitarConvite from './components/AceitarConvite'
+import { esquecerConvite, lerConvite } from './nuvem/convite'
 import { ouvirErros } from './lib/avisos'
 import { api } from './api/client'
 import { trocarSessao, useEnxoval, useEu } from './api/hooks'
@@ -28,17 +31,19 @@ import Carregando from './components/Carregando'
 import InstalarApp from './components/InstalarApp'
 import { fonteNome } from './theme'
 import { preposicaoBebe } from './lib/format'
-import { modoDemo } from './demo/modo'
+import { demoFixa, modoDemo, sairDaDemo } from './demo/modo'
 
 /** Guarda de sessão: sem conta logada, mostra a tela de entrada. */
 export default function App() {
   const eu = useEu()
+  const { pathname } = useLocation()
   const [erro, setErro] = useState<string | null>(null)
   useEffect(() => ouvirErros(setErro), [])
 
   return (
     <>
-      {eu.isPending ? <Carregando /> : eu.data ? <AppLogado /> : <EntrarPage />}
+      {pathname === '/redefinir-senha' && !modoDemo ? <RedefinirSenhaPage />
+        : eu.isPending ? <Carregando /> : eu.data ? <AppLogado /> : <EntrarPage />}
       <Snackbar open={!!erro} autoHideDuration={5000} onClose={() => setErro(null)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert severity="error" variant="filled" onClose={() => setErro(null)}>{erro}</Alert>
@@ -53,6 +58,10 @@ function AppLogado() {
   const qc = useQueryClient()
   const enxoval = useEnxoval()
   const t = useTheme().palette.tema
+  // Convite aberto por quem já tinha enxoval nesta conta: pergunta antes de trocar. Conta nova aceita sozinha ao
+  // carregar o enxoval (nuvem/api.ts), por isso só se lê o convite depois que o enxoval chegou.
+  const [conviteFechado, setConviteFechado] = useState(false)
+  const convite = enxoval.data && !modoDemo && !conviteFechado ? lerConvite() : null
   const nome = enxoval.data?.nomeBebe
 
   const sair = async () => {
@@ -112,6 +121,9 @@ function AppLogado() {
       {modoDemo && (
         <Typography variant="caption" component="p" align="center" sx={{ bgcolor: 'tema.suave', color: 'primary.dark', py: 0.5, px: 2 }}>
           Demonstração: as alterações ficam salvas só neste navegador.
+          {!demoFixa && <> · <Box component="button" onClick={sairDaDemo} sx={{
+            all: 'unset', cursor: 'pointer', textDecoration: 'underline', fontWeight: 700,
+          }}>Usar conta de verdade</Box></>}
         </Typography>
       )}
       <Container maxWidth="md" sx={{ py: 3 }}>
@@ -126,6 +138,9 @@ function AppLogado() {
           <Route path="*" element={<Navigate to="/painel" replace />} />
         </Routes>
       </Container>
+
+      <AceitarConvite codigo={enxoval.data.boasVindasConcluidas ? convite : null}
+        onFechar={() => { esquecerConvite(); setConviteFechado(true) }} />
 
       <Paper elevation={0} sx={{
         display: { xs: 'block', sm: 'none' }, position: 'fixed', left: 12, right: 12, bottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 10,

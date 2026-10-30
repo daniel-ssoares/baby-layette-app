@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, api } from '../api/client'
+import { ApiError, apiHttp as api } from '../api/client'
 import { contaDemo } from './modo'
 
 // Sem rede: Open-Meteo "fora do ar" (clima fica nulo, como na API real).

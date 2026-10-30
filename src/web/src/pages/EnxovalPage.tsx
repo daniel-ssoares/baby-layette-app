@@ -17,6 +17,7 @@ import { type PreferenciaModo, rotuloPreferencia } from '../lib/modoCor'
 import SeletorTema from '../components/SeletorTema'
 import SeletorCidade from '../components/SeletorCidade'
 import TrocarSenha from '../components/TrocarSenha'
+import Casal from '../components/Casal'
 
 export default function EnxovalPage() {
   const enxoval = useEnxoval()
@@ -108,7 +109,12 @@ export default function EnxovalPage() {
     </Card>
 
     <Card sx={{ p: 3 }}>
-      <Typography variant="h6" sx={{ mb: 1 }}>Conta do casal</Typography>
+      <Typography variant="h6" sx={{ mb: 1.5 }}>Quem participa</Typography>
+      <Casal />
+    </Card>
+
+    <Card sx={{ p: 3 }}>
+      <Typography variant="h6" sx={{ mb: 1 }}>Sua conta</Typography>
       <TrocarSenha />
     </Card>
     </Stack>

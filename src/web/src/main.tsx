@@ -9,6 +9,8 @@ import App from './App'
 import { avisarErro } from './lib/avisos'
 import TemaProvider from './temas/TemaProvider'
 import { modoDemo } from './demo/modo'
+import { capturarConviteDaUrl } from './nuvem/convite'
+import { supabase } from './nuvem/supabase'
 
 // Sessão expirada (401) em qualquer chamada: volta para a tela de entrada.
 const tratarErro = (e: Error) => {
@@ -35,9 +37,15 @@ const renderizar = () => createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// Demonstração: a "API" roda no navegador (carregada só nesse build).
+// Demonstração: a "API" roda no navegador (carregada só nesse modo).
 if (modoDemo) import('./demo/servidor').then(m => { m.instalar(); renderizar() })
-else renderizar()
+else {
+  capturarConviteDaUrl()
+  // Sessão encerrada fora do app (senha trocada em outro aparelho, token vencido): volta para a entrada.
+  try { supabase().auth.onAuthStateChange(evento => { if (evento === 'SIGNED_OUT') queryClient.setQueryData(keys.eu, null) }) }
+  catch (e) { console.error(e) }
+  renderizar()
+}
 
 // App instalável (PWA): só no build publicado e em HTTPS/localhost (exigência do navegador).
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext)
