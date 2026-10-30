@@ -76,6 +76,11 @@ namespace Enxoval.Api.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Tema")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("UsuarioId")
                         .HasColumnType("TEXT");
 

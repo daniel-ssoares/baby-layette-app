@@ -13,9 +13,10 @@ beforeAll(async () => {
 describe('sessão (fluxo pela tela)', () => {
   it('entrar troca para o app e sair volta para a tela de entrada', async () => {
     const { default: App } = await import('./App')
+    const { default: TemaProvider } = await import('./temas/TemaProvider')
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <MemoryRouter initialEntries={['/painel']}><App /></MemoryRouter>
+        <TemaProvider><MemoryRouter initialEntries={['/painel']}><App /></MemoryRouter></TemaProvider>
       </QueryClientProvider>)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Entrar na demonstração' }))

@@ -1,4 +1,5 @@
 import type { SvgIconComponent } from '@mui/icons-material'
+import { alpha, lighten } from '@mui/material'
 import BedIcon from '@mui/icons-material/Bed'
 import CheckroomIcon from '@mui/icons-material/Checkroom'
 import BathtubIcon from '@mui/icons-material/Bathtub'
@@ -28,4 +29,8 @@ const neutro: VisualCategoria = { Icone: CategoryIcon, cor: '#8C7F84', fundo: '#
 
 const chave = (nome: string) => nome.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
 
-export const visualCategoria = (nome: string): VisualCategoria => visuais[chave(nome)] ?? neutro
+/** No modo escuro o ícone fica mais claro e o fundo vira um véu da mesma cor (o pastel "acenderia" no escuro). */
+export function visualCategoria(nome: string, escuro = false): VisualCategoria {
+  const v = visuais[chave(nome)] ?? neutro
+  return escuro ? { ...v, cor: lighten(v.cor, 0.35), fundo: alpha(v.cor, 0.2) } : v
+}

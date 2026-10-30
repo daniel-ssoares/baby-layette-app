@@ -12,7 +12,8 @@ export const keys = {
 
 /** Conta logada; `null` quando não há sessão. */
 export const useEu = () => useQuery({ queryKey: keys.eu, queryFn: api.eu, retry: false, staleTime: Infinity })
-export const useEnxoval =() => useQuery({ queryKey: keys.enxoval, queryFn: api.enxoval })
+/** `ativo = false` não busca (ex.: tema antes do login). */
+export const useEnxoval = (ativo = true) => useQuery({ queryKey: keys.enxoval, queryFn: api.enxoval, enabled: ativo })
 export const useCategorias = () => useQuery({ queryKey: keys.categorias, queryFn: api.categorias })
 export const useItens = () => useQuery({ queryKey: keys.itens, queryFn: api.itens })
 export const usePainel = () => useQuery({ queryKey: keys.painel, queryFn: api.painel })

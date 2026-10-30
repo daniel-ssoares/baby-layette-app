@@ -1,0 +1,23 @@
+# API no Fly.io (passo a passo em docs/hospedagem.md). Troque "app" pelo nome escolhido no `fly launch`.
+app = "enxoval-api"
+primary_region = "gru"  # São Paulo
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Uma máquina só (SQLite não é compartilhado entre máquinas), com volume para banco, fotos e chaves.
+[mounts]
+  source = "dados"
+  destination = "/dados"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Desliga quando ninguém usa e liga no primeiro acesso (alguns segundos): custo quase zero.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

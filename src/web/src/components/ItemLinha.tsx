@@ -12,7 +12,6 @@ import DeleteIcon from '@mui/icons-material/DeleteOutlined'
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBagOutlined'
 import type { Item } from '../api/types'
 import { moeda } from '../lib/format'
-import { cores } from '../theme'
 
 interface Props {
   item: Item
@@ -36,7 +35,7 @@ export default function ItemLinha({ item: i, onMais, onMenos, onConcluir, onRegi
   return (
     <Stack direction="row" spacing={1} sx={{
       alignItems: 'center', px: { xs: 1, sm: 1.5 }, py: 1.25,
-      borderTop: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: '#FDFCF6' },
+      borderTop: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'tema.hover' },
       opacity: i.foraDaEstacao ? 0.55 : 1,
     }}>
       <Tooltip title={concluido ? 'Concluído' : 'Marcar como concluído'}>
@@ -59,12 +58,12 @@ export default function ItemLinha({ item: i, onMais, onMenos, onConcluir, onRegi
           )}
           <Typography sx={{
             fontWeight: 600, color: concluido ? 'text.secondary' : 'text.primary',
-            textDecoration: concluido ? 'line-through' : 'none', textDecorationColor: 'rgba(0,0,0,.25)',
+            textDecoration: concluido ? 'line-through' : 'none', textDecorationColor: 'currentColor',
           }} noWrap>
             {i.nome}
           </Typography>
-          {i.clima === 'Frio' && <Tooltip title="Item de frio"><AcUnitIcon sx={{ fontSize: 16, color: '#5B8DB8' }} /></Tooltip>}
-          {i.clima === 'Calor' && <Tooltip title="Item de calor"><WbSunnyIcon sx={{ fontSize: 16, color: '#D98B4A' }} /></Tooltip>}
+          {i.clima === 'Frio' && <Tooltip title="Item de frio"><AcUnitIcon sx={{ fontSize: 16, color: 'tema.frio.cor' }} /></Tooltip>}
+          {i.clima === 'Calor' && <Tooltip title="Item de calor"><WbSunnyIcon sx={{ fontSize: 16, color: 'tema.calor.cor' }} /></Tooltip>}
           {i.foraDaEstacao && <Chip size="small" label="fora da estação" sx={{ height: 20, fontSize: 11 }} />}
         </Stack>
         {(detalhes.length > 0 || i.observacoes) && (
@@ -77,7 +76,7 @@ export default function ItemLinha({ item: i, onMais, onMenos, onConcluir, onRegi
 
       <Stack direction="row" sx={{
         alignItems: 'center', flexShrink: 0, borderRadius: 999,
-        bgcolor: concluido ? cores.salviaClara : i.status === 'Parcial' ? '#F8EBDC' : cores.areia,
+        bgcolor: concluido ? 'tema.sucessoSuave' : i.status === 'Parcial' ? 'tema.parcialSuave' : 'tema.afundado',
       }}>
         <IconButton size="small" onClick={onMenos} disabled={i.qtdAdquirida === 0} aria-label="Remover um">
           <RemoveIcon sx={{ fontSize: 16 }} />

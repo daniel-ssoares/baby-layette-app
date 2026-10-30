@@ -1,24 +1,26 @@
 import { useNavigate } from 'react-router'
-import { Box, Button, Card, Chip, Stack, Typography } from '@mui/material'
+import { Box, Button, Card, Chip, Stack, Typography, useTheme } from '@mui/material'
 import AcUnitIcon from '@mui/icons-material/AcUnit'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
 import PlaceIcon from '@mui/icons-material/Place'
 import type { PerfilClima } from '../api/types'
+import type { CoresTema } from '../theme'
 import { nomeMes, rotuloEstacao } from '../lib/format'
 
 // Mesmos limiares do back-end (AnaliseClima.cs).
 const LIMITE_FRIO = 21
 const LIMITE_CALOR = 23
 
-function corTemperatura(t: number) {
-  if (t < LIMITE_FRIO) return { cor: '#5B8DB8', fundo: '#E3EEF7' }
-  if (t > LIMITE_CALOR) return { cor: '#D98B4A', fundo: '#FBEBDD' }
-  return { cor: '#6F7D45', fundo: '#ECEFDD' }
+function corTemperatura(t: number, tema: CoresTema) {
+  if (t < LIMITE_FRIO) return tema.frio
+  if (t > LIMITE_CALOR) return tema.calor
+  return { cor: tema.principal, fundo: tema.suave }
 }
 
 /** Clima previsto para os primeiros meses de vida, a partir da cidade e da data do parto. */
 export default function ClimaCard({ clima, foraDaEstacao }: { clima: PerfilClima | null; foraDaEstacao: number }) {
   const navigate = useNavigate()
+  const tema = useTheme().palette.tema
 
   if (!clima) {
     return (
@@ -48,14 +50,14 @@ export default function ClimaCard({ clima, foraDaEstacao }: { clima: PerfilClima
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          {clima.precisaFrio && <Chip size="small" icon={<AcUnitIcon />} label="Frio" sx={{ bgcolor: '#E3EEF7', color: '#5B8DB8', '& .MuiChip-icon': { color: '#5B8DB8' } }} />}
-          {clima.precisaCalor && <Chip size="small" icon={<WbSunnyIcon />} label="Calor" sx={{ bgcolor: '#FBEBDD', color: '#D98B4A', '& .MuiChip-icon': { color: '#D98B4A' } }} />}
+          {clima.precisaFrio && <Chip size="small" icon={<AcUnitIcon />} label="Frio" sx={{ bgcolor: 'tema.frio.fundo', color: 'tema.frio.cor', '& .MuiChip-icon': { color: 'tema.frio.cor' } }} />}
+          {clima.precisaCalor && <Chip size="small" icon={<WbSunnyIcon />} label="Calor" sx={{ bgcolor: 'tema.calor.fundo', color: 'tema.calor.cor', '& .MuiChip-icon': { color: 'tema.calor.cor' } }} />}
         </Stack>
       </Stack>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${clima.meses.length}, 1fr)`, gap: 1, my: 2 }}>
         {clima.meses.map(m => {
-          const { cor, fundo } = corTemperatura(m.tempMedia)
+          const { cor, fundo } = corTemperatura(m.tempMedia, tema)
           return (
             <Box key={`${m.ano}-${m.mes}`} sx={{ bgcolor: fundo, borderRadius: '14px', py: 1.25, textAlign: 'center' }}>
               <Typography variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 700, color: 'text.secondary' }}>

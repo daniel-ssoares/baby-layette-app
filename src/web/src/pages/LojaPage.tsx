@@ -8,9 +8,8 @@ import { falta, montarLoja } from '../lib/loja'
 import { moeda } from '../lib/format'
 import IconeCategoria from '../components/IconeCategoria'
 import RegistrarCompraDialog from '../components/RegistrarCompraDialog'
-import RamoOliveira from '../components/RamoOliveira'
+import Motivo from '../temas/Motivo'
 import Carregando from '../components/Carregando'
-import { cores } from '../theme'
 
 /** RF26: checklist para usar na loja — só o que falta, toque no item para registrar a compra. */
 export default function LojaPage() {
@@ -29,8 +28,8 @@ export default function LojaPage() {
 
   return (
     <Stack spacing={2}>
-      <Card sx={{ p: 2.5, bgcolor: cores.olivaClara, position: 'relative', overflow: 'hidden' }}>
-        <RamoOliveira tamanho={110} sx={{ position: 'absolute', right: -14, bottom: -18, opacity: 0.35 }} />
+      <Card sx={{ p: 2.5, bgcolor: 'tema.suave', position: 'relative', overflow: 'hidden' }}>
+        <Motivo tamanho={110} sx={{ position: 'absolute', right: -14, bottom: -18, opacity: 0.35 }} />
         <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.dark' }}>
           Falta comprar{soEssenciais ? ' (essenciais)' : ''}
         </Typography>
@@ -47,7 +46,7 @@ export default function LojaPage() {
           slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon color="disabled" /></InputAdornment> } }} />
         <Chip label="Essenciais" onClick={() => setSoEssenciais(v => !v)}
           color={soEssenciais ? 'primary' : 'default'} variant={soEssenciais ? 'filled' : 'outlined'}
-          sx={{ flexShrink: 0, height: 40, bgcolor: soEssenciais ? undefined : '#fff' }} />
+          sx={{ flexShrink: 0, height: 40, bgcolor: soEssenciais ? undefined : 'background.paper' }} />
       </Stack>
 
       {loja.grupos.length === 0 && (
@@ -94,7 +93,7 @@ function LinhaLoja({ item: i, onClick }: { item: Item; onClick: () => void }) {
         {detalhes.length > 0 && <Typography variant="body2" color="text.secondary" noWrap>{detalhes.join(' · ')}</Typography>}
       </Box>
       <Chip size="small" label={falta(i) === 1 ? 'falta 1' : `faltam ${falta(i)}`}
-        sx={{ bgcolor: i.status === 'Parcial' ? '#F8EBDC' : cores.areia, fontWeight: 700, flexShrink: 0 }} />
+        sx={{ bgcolor: i.status === 'Parcial' ? 'tema.parcialSuave' : 'tema.afundado', fontWeight: 700, flexShrink: 0 }} />
       <AddShoppingCartIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
     </ButtonBase>
   )

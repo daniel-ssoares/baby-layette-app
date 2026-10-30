@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import {
   Badge, Box, Button, Card, Chip, Collapse, Fab, IconButton, InputAdornment, LinearProgress, MenuItem,
-  Stack, TextField, Tooltip, Typography,
+  Stack, TextField, Tooltip, Typography, useTheme,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import SearchIcon from '@mui/icons-material/Search'
@@ -34,6 +34,7 @@ function filtrosDaUrl(params: URLSearchParams): Filtros {
 export default function ItensPage() {
   const itens = useItens()
   const categorias = useCategorias()
+  const escuro = useTheme().palette.mode === 'dark'
   const [params] = useSearchParams()
   const [filtros, setFiltros] = useState<Filtros>(() => filtrosDaUrl(params))
   const [maisFiltros, setMaisFiltros] = useState(() => filtros.prioridade !== '')
@@ -88,8 +89,8 @@ export default function ItensPage() {
           slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon color="disabled" /></InputAdornment> } }} />
         <Tooltip title="Mais filtros">
           <IconButton onClick={() => setMaisFiltros(v => !v)}
-            sx={{ bgcolor: maisFiltros ? 'primary.main' : '#fff', color: maisFiltros ? '#fff' : 'text.secondary',
-              border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: maisFiltros ? 'primary.dark' : '#fff' } }}>
+            sx={{ bgcolor: maisFiltros ? 'primary.main' : 'background.paper', color: maisFiltros ? 'primary.contrastText' : 'text.secondary',
+              border: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: maisFiltros ? 'primary.dark' : 'background.paper' } }}>
             <Badge badgeContent={extrasAtivos} color="secondary"><TuneIcon /></Badge>
           </IconButton>
         </Tooltip>
@@ -120,15 +121,15 @@ export default function ItensPage() {
       }}>
         <Chip label="Todas" onClick={() => set('categoriaId', '')}
           color={filtros.categoriaId === '' ? 'primary' : 'default'}
-          variant={filtros.categoriaId === '' ? 'filled' : 'outlined'} sx={{ bgcolor: filtros.categoriaId === '' ? undefined : '#fff' }} />
+          variant={filtros.categoriaId === '' ? 'filled' : 'outlined'} sx={{ bgcolor: filtros.categoriaId === '' ? undefined : 'background.paper' }} />
         {categorias.data.map(c => {
           const ativo = filtros.categoriaId === c.id
-          const { Icone, cor, fundo } = visualCategoria(c.nome)
+          const { Icone, cor, fundo } = visualCategoria(c.nome, escuro)
           return (
             <Chip key={c.id} label={c.nome} icon={<Icone sx={{ fontSize: 18 }} />}
               onClick={() => set('categoriaId', ativo ? '' : c.id)} variant="outlined"
               sx={{
-                flexShrink: 0, bgcolor: ativo ? fundo : '#fff', borderColor: ativo ? cor : 'divider',
+                flexShrink: 0, bgcolor: ativo ? fundo : 'background.paper', borderColor: ativo ? cor : 'divider',
                 color: ativo ? cor : 'text.primary', '& .MuiChip-icon': { color: cor },
               }} />
           )
@@ -143,7 +144,7 @@ export default function ItensPage() {
       )}
 
       {qtdFora > 0 && (
-        <Chip variant="outlined" onClick={() => setMostrarFora(v => !v)} sx={{ alignSelf: 'flex-start', bgcolor: '#fff', mt: -1 }}
+        <Chip variant="outlined" onClick={() => setMostrarFora(v => !v)} sx={{ alignSelf: 'flex-start', bgcolor: 'background.paper', mt: -1 }}
           label={mostrarFora ? 'Ocultar itens fora da estação' : `Mostrar ${qtdFora} itens fora da estação`} />
       )}
 
@@ -154,7 +155,7 @@ export default function ItensPage() {
       {grupos.map(({ categoria, itens }) => {
         const contaveis = itens.filter(i => !i.foraDaEstacao)
         const prontos = contaveis.filter(i => i.status === 'Concluido').length
-        const { cor } = visualCategoria(categoria.nome)
+        const { cor } = visualCategoria(categoria.nome, escuro)
         return (
           <Card key={categoria.id}>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', p: 2 }}>

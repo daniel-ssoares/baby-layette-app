@@ -17,7 +17,7 @@ export default function ExportarMenu() {
   return (
     <>
       <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={e => setAncora(e.currentTarget)}
-        sx={{ bgcolor: '#fff' }}>
+        sx={{ bgcolor: 'background.paper' }}>
         Exportar
       </Button>
       <Menu anchorEl={ancora} open={!!ancora} onClose={() => setAncora(null)}

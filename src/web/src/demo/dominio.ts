@@ -1,6 +1,6 @@
 // Modo demonstração: cópia em TypeScript das regras do Enxoval.Domain (Entities.cs, Painel.cs, AnaliseClima.cs).
 // Ao mudar uma regra no Domain, mudar aqui também.
-import type { Categoria, Clima, Estacao, Item, OrigemItem, Painel, PerfilClima, Prioridade, SexoBebe } from '../api/types'
+import type { Categoria, Clima, Estacao, Item, OrigemItem, Painel, PerfilClima, Prioridade, SexoBebe, TemaVisual } from '../api/types'
 
 export interface ItemSalvo {
   id: number
@@ -29,6 +29,8 @@ export interface EnxovalSalvo {
   cidade: string | null
   latitude: number | null
   longitude: number | null
+  /** Ausente em dados salvos antes dos temas: vale Oliveira. */
+  tema?: TemaVisual
 }
 
 export type CategoriaSalva = Omit<Categoria, 'totalItens'>

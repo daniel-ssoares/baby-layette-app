@@ -4,7 +4,6 @@ import AddAPhotoIcon from '@mui/icons-material/AddAPhotoOutlined'
 import DeleteIcon from '@mui/icons-material/DeleteOutlined'
 import type { AlteracaoFoto } from '../api/types'
 import { reduzirImagem } from '../lib/imagem'
-import { cores } from '../theme'
 
 interface Props {
   urlAtual: string | null
@@ -30,7 +29,7 @@ export default function CampoFoto({ urlAtual, alteracao, onChange }: Props) {
   return (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
       <Box sx={{
-        width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', flexShrink: 0, bgcolor: cores.olivaClara,
+        width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', flexShrink: 0, bgcolor: 'tema.suave',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'primary.main',
       }}>
         {reduzindo ? <CircularProgress size={24} />

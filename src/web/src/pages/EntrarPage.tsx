@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { Alert, Box, Button, Card, Stack, Tab, Tabs, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, Stack, Tab, Tabs, TextField, Typography, useTheme } from '@mui/material'
 import { api } from '../api/client'
 import { trocarSessao } from '../api/hooks'
-import { cores, fonteNome } from '../theme'
-import RamoOliveira from '../components/RamoOliveira'
+import { fonteNome } from '../theme'
+import Motivo, { Confetes } from '../temas/Motivo'
+import { fundoDecorado } from '../temas/desenhos'
 import { contaDemo, modoDemo } from '../demo/modo'
 
 interface Campos { email: string; senha: string; confirmacao: string }
@@ -13,6 +14,7 @@ interface Campos { email: string; senha: string; confirmacao: string }
 /** T1: entrar ou criar a conta do casal (uma conta compartilhada). */
 export default function EntrarPage() {
   const qc = useQueryClient()
+  const t = useTheme().palette.tema
   const [modo, setModo] = useState<'entrar' | 'criar'>('entrar')
   const [erro, setErro] = useState<string | null>(null)
   const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<Campos>()
@@ -31,11 +33,12 @@ export default function EntrarPage() {
   return (
     <Box sx={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2,
-      background: `linear-gradient(160deg, ${cores.olivaClara} 0%, ${cores.creme} 50%, ${cores.rosaClaro} 100%)`,
+      background: fundoDecorado(t), backgroundSize: '64px, auto', position: 'relative', overflow: 'hidden',
     }}>
-      <Card sx={{ width: '100%', maxWidth: 400, p: { xs: 3, sm: 4 } }}>
+      <Confetes quantidade={6} />
+      <Card sx={{ position: 'relative', width: '100%', maxWidth: 400, p: { xs: 3, sm: 4 } }}>
         <Stack sx={{ alignItems: 'center', mb: 2 }}>
-          <RamoOliveira tamanho={96} />
+          <Motivo tamanho={96} animado />
           <Typography sx={{ fontFamily: fonteNome, fontSize: 40, fontWeight: 700, color: 'primary.main', lineHeight: 1.1 }}>
             Enxoval
           </Typography>
@@ -43,7 +46,7 @@ export default function EntrarPage() {
         </Stack>
 
         {modoDemo && (
-          <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: cores.olivaClara, color: 'text.primary', '& .MuiAlert-message': { width: '100%' } }}>
+          <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: 'tema.suave', color: 'text.primary', '& .MuiAlert-message': { width: '100%' } }}>
             <Typography variant="body2" sx={{ mb: 1 }}>
               <b>Versão de demonstração.</b> Os dados ficam só neste navegador. Entre na conta de exemplo ou crie a sua.
             </Typography>

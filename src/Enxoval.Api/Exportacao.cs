@@ -11,8 +11,19 @@ namespace Enxoval.Api;
 public static class Exportacao
 {
     private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
-    // Paleta oliva (mesma de src/web/src/theme.ts)
-    private const string Oliva = "#6F7D45", OlivaClara = "#ECEFDD", Texto = "#3F4232", TextoSuave = "#7E8070", Linha = "#E4E2D8";
+    // Versão clara de cada tema (src/web/src/temas/paletas.ts; principal um pouco mais escura para o papel):
+    // principal, suave, texto, texto suave, linha.
+    private static readonly Dictionary<TemaVisual, (string Principal, string Suave, string Texto, string TextoSuave, string Linha)> Paletas = new()
+    {
+        [TemaVisual.Oliveira] = ("#5E7A2A", "#E8EED6", "#33381F", "#737960", "#DDE2CC"),
+        [TemaVisual.Cerejeira] = ("#C8466A", "#FCE1E8", "#3F2431", "#8C6676", "#F2D3DC"),
+        [TemaVisual.Lavanda] = ("#7A52C7", "#EEE6FB", "#2E2546", "#776E92", "#E0D7F2"),
+        [TemaVisual.Pessego] = ("#D9623D", "#FFE6DA", "#43281D", "#91705F", "#F4D9CC"),
+        [TemaVisual.Jardim] = ("#2F8A5B", "#DDF2E3", "#1F3A2A", "#62806D", "#CDE6D5"),
+        [TemaVisual.Ceu] = ("#2F7BC8", "#DCEBFC", "#1C3350", "#647D9D", "#CCDDF1"),
+        [TemaVisual.Oceano] = ("#0F7A83", "#D3F0EE", "#123A3E", "#5A8285", "#C3E3E1"),
+        [TemaVisual.Ursinho] = ("#A3652F", "#F5E3CF", "#36261A", "#86705C", "#EAD6C0"),
+    };
 
     static Exportacao() => QuestPDF.Settings.License = LicenseType.Community;
 
@@ -26,30 +37,33 @@ public static class Exportacao
     private static string NomeComTamanho(LinhaCompra l) =>
         l.Tamanho is null or "Único" ? l.Nome : $"{l.Nome} ({l.Tamanho})";
 
-    public static byte[] Pdf(ListaDeCompras lista, string titulo, DateOnly hoje) => DocumentoPdf(lista, titulo, hoje).GeneratePdf();
+    public static byte[] Pdf(ListaDeCompras lista, string titulo, DateOnly hoje, TemaVisual tema = TemaVisual.Oliveira) =>
+        DocumentoPdf(lista, titulo, hoje, tema).GeneratePdf();
 
     /// <summary>Documento QuestPDF (também permite gerar imagens das páginas para conferência).</summary>
-    public static IDocument DocumentoPdf(ListaDeCompras lista, string titulo, DateOnly hoje) => Document.Create(doc => doc.Page(page =>
+    public static IDocument DocumentoPdf(ListaDeCompras lista, string titulo, DateOnly hoje, TemaVisual tema = TemaVisual.Oliveira) =>
+        Document.Create(doc => doc.Page(page =>
     {
+        var (corPrincipal, corSuave, corTexto, corTextoSuave, corLinha) = Paletas[tema];
         page.Size(PageSizes.A4);
         page.Margin(36);
-        page.DefaultTextStyle(t => t.FontSize(10).FontColor(Texto));
+        page.DefaultTextStyle(t => t.FontSize(10).FontColor(corTexto));
 
-        page.Header().PaddingBottom(12).BorderBottom(1.5f).BorderColor(Oliva).Row(row =>
+        page.Header().PaddingBottom(12).BorderBottom(1.5f).BorderColor(corPrincipal).Row(row =>
         {
             row.RelativeItem().Column(c =>
             {
-                c.Item().Text(titulo).FontSize(22).Bold().FontColor(Oliva);
+                c.Item().Text(titulo).FontSize(22).Bold().FontColor(corPrincipal);
                 c.Item().Text(lista.Completa ? "Lista completa do enxoval" : "Lista de compras — o que falta comprar")
-                    .FontSize(11).FontColor(TextoSuave);
+                    .FontSize(11).FontColor(corTextoSuave);
             });
             row.ConstantItem(150).AlignRight().Column(c =>
             {
-                c.Item().AlignRight().Text(hoje.ToString("dd/MM/yyyy", PtBr)).FontColor(TextoSuave);
-                c.Item().AlignRight().Text($"{lista.TotalLinhas} itens").FontColor(TextoSuave);
+                c.Item().AlignRight().Text(hoje.ToString("dd/MM/yyyy", PtBr)).FontColor(corTextoSuave);
+                c.Item().AlignRight().Text($"{lista.TotalLinhas} itens").FontColor(corTextoSuave);
                 c.Item().AlignRight().Text(t =>
                 {
-                    t.Span("Falta: ").FontColor(TextoSuave);
+                    t.Span("Falta: ").FontColor(corTextoSuave);
                     t.Span(Moeda(lista.Total)).FontSize(13).Bold();
                 });
             });
@@ -64,8 +78,8 @@ public static class Exportacao
             {
                 col.Item().PaddingTop(14).PaddingBottom(4).Row(r =>
                 {
-                    r.RelativeItem().Text(grupo.Categoria).FontSize(13).Bold().FontColor(Oliva);
-                    r.AutoItem().AlignBottom().Text(Moeda(grupo.Subtotal)).FontColor(TextoSuave);
+                    r.RelativeItem().Text(grupo.Categoria).FontSize(13).Bold().FontColor(corPrincipal);
+                    r.AutoItem().AlignBottom().Text(Moeda(grupo.Subtotal)).FontColor(corTextoSuave);
                 });
                 col.Item().Table(t =>
                 {
@@ -83,20 +97,20 @@ public static class Exportacao
                     {
                         string[] cab = ["", "Item", lista.Completa ? "Tenho/Quero" : "Falta", "Prior.", "Preço un.", "A gastar"];
                         foreach (var texto in lista.Completa ? [.. cab, "Status"] : cab)
-                            h.Cell().Background(OlivaClara).PaddingVertical(4).PaddingHorizontal(3)
-                                .Text(texto).FontSize(8.5f).Bold().FontColor(TextoSuave);
+                            h.Cell().Background(corSuave).PaddingVertical(4).PaddingHorizontal(3)
+                                .Text(texto).FontSize(8.5f).Bold().FontColor(corTextoSuave);
                     });
                     foreach (var l in grupo.Linhas)
                     {
-                        IContainer Celula() => t.Cell().BorderBottom(0.5f).BorderColor(Linha).PaddingVertical(5).PaddingHorizontal(3);
-                        var caixa = Celula().AlignMiddle().Width(10).Height(10).Border(0.8f).BorderColor(TextoSuave);
-                        if (l.Status == StatusItem.Concluido) caixa.Background(Oliva); // já comprado: caixinha marcada
+                        IContainer Celula() => t.Cell().BorderBottom(0.5f).BorderColor(corLinha).PaddingVertical(5).PaddingHorizontal(3);
+                        var caixa = Celula().AlignMiddle().Width(10).Height(10).Border(0.8f).BorderColor(corTextoSuave);
+                        if (l.Status == StatusItem.Concluido) caixa.Background(corPrincipal); // já comprado: caixinha marcada
                         Celula().Text(NomeComTamanho(l));
                         Celula().AlignCenter().Text(lista.Completa ? $"{l.Adquirida}/{l.Desejada}" : l.Falta.ToString(PtBr)).Bold();
-                        Celula().Text(Prioridade(l.Prioridade)).FontColor(l.Prioridade == Domain.Prioridade.Alta ? Oliva : TextoSuave);
+                        Celula().Text(Prioridade(l.Prioridade)).FontColor(l.Prioridade == Domain.Prioridade.Alta ? corPrincipal : corTextoSuave);
                         Celula().AlignRight().Text(Moeda(l.PrecoUnitario));
                         Celula().AlignRight().Text(Moeda(l.Subtotal));
-                        if (lista.Completa) Celula().Text(Status(l)).FontSize(8.5f).FontColor(TextoSuave);
+                        if (lista.Completa) Celula().Text(Status(l)).FontSize(8.5f).FontColor(corTextoSuave);
                     }
                 });
             }
@@ -104,7 +118,7 @@ public static class Exportacao
 
         page.Footer().AlignCenter().Text(t =>
         {
-            t.DefaultTextStyle(s => s.FontSize(8).FontColor(TextoSuave));
+            t.DefaultTextStyle(s => s.FontSize(8).FontColor(corTextoSuave));
             t.Span("Preços estimados · página ");
             t.CurrentPageNumber();
             t.Span(" de ");
@@ -112,8 +126,9 @@ public static class Exportacao
         });
     }));
 
-    public static byte[] Excel(ListaDeCompras lista, string titulo)
+    public static byte[] Excel(ListaDeCompras lista, string titulo, TemaVisual tema = TemaVisual.Oliveira)
     {
+        var (corPrincipal, corSuave, _, _, _) = Paletas[tema];
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Lista de compras");
         string[] cabecalho = ["Categoria", "Item", "Tamanho", "Quero", "Tenho", "Falta", "Prioridade", "Preço unitário", "A gastar", "Status"];
@@ -143,8 +158,8 @@ public static class Exportacao
 
         var cab = ws.Range(1, 1, 1, cabecalho.Length);
         cab.Style.Font.Bold = true;
-        cab.Style.Font.FontColor = XLColor.FromHtml(Oliva);
-        cab.Style.Fill.BackgroundColor = XLColor.FromHtml(OlivaClara);
+        cab.Style.Font.FontColor = XLColor.FromHtml(corPrincipal);
+        cab.Style.Fill.BackgroundColor = XLColor.FromHtml(corSuave);
         if (ultima >= 2) ws.Range(1, 1, ultima, cabecalho.Length).SetAutoFilter();
         ws.Range(2, 8, r, 9).Style.NumberFormat.Format = "\"R$\" #,##0.00";
         ws.SheetView.FreezeRows(1);

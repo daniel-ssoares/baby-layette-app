@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import {
   Alert, BottomNavigation, BottomNavigationAction, Box, Button, Container, IconButton, Paper, Snackbar, Stack,
-  Tooltip, Typography,
+  Tooltip, Typography, useTheme,
 } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/DashboardOutlined'
 import ListIcon from '@mui/icons-material/FormatListBulleted'
@@ -21,9 +21,12 @@ import BoasVindasPage from './pages/BoasVindasPage'
 import { ouvirErros } from './lib/avisos'
 import { api } from './api/client'
 import { trocarSessao, useEnxoval, useEu } from './api/hooks'
-import RamoOliveira from './components/RamoOliveira'
+import Motivo from './temas/Motivo'
+import { padraoFundo } from './temas/desenhos'
+import BotaoModoCor from './components/BotaoModoCor'
 import Carregando from './components/Carregando'
-import { cores, fonteNome } from './theme'
+import InstalarApp from './components/InstalarApp'
+import { fonteNome } from './theme'
 import { preposicaoBebe } from './lib/format'
 import { modoDemo } from './demo/modo'
 
@@ -49,6 +52,7 @@ function AppLogado() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const enxoval = useEnxoval()
+  const t = useTheme().palette.tema
   const nome = enxoval.data?.nomeBebe
 
   const sair = async () => {
@@ -69,13 +73,17 @@ function AppLogado() {
   const abaAtual = abas.find(a => pathname.startsWith(a.path))?.path ?? false
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: { xs: 'calc(96px + env(safe-area-inset-bottom))', sm: 4 } }}>
+    <Box sx={{
+      minHeight: '100vh', pb: { xs: 'calc(96px + env(safe-area-inset-bottom))', sm: 4 },
+      pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)',
+    }}>
       <Box component="header" sx={{
-        position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(10px)',
-        bgcolor: 'rgba(251, 248, 241, 0.88)', borderBottom: '1px solid', borderColor: 'divider',
+        position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(10px)', pt: 'env(safe-area-inset-top)',
+        bgcolor: 'tema.vidro', backgroundImage: padraoFundo(t.id, t, 0.12), backgroundSize: '56px',
+        borderBottom: '1px solid', borderColor: 'divider',
       }}>
         <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
-          <RamoOliveira tamanho={44} />
+          <Motivo tamanho={44} />
           <Typography variant="h6" component="h1" sx={{ flex: 1, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
             <Box component="span" sx={{ fontSize: 14, fontWeight: 700, color: 'text.secondary' }}>Enxoval {preposicaoBebe(nome, enxoval.data.sexo)}</Box>
             <Box component="span" sx={{ fontFamily: fonteNome, fontSize: 30, fontWeight: 700, color: 'primary.main' }}>
@@ -88,12 +96,13 @@ function AppLogado() {
                 color={abaAtual === path ? 'primary' : 'inherit'}
                 sx={{
                   color: abaAtual === path ? 'primary.main' : 'text.secondary',
-                  bgcolor: abaAtual === path ? cores.olivaClara : 'transparent',
+                  bgcolor: abaAtual === path ? 'tema.suave' : 'transparent',
                 }}>
                 {label}
               </Button>
             ))}
           </Stack>
+          <BotaoModoCor />
           <Tooltip title="Sair">
             <IconButton onClick={sair} aria-label="Sair" sx={{ color: 'text.secondary' }}><LogoutIcon /></IconButton>
           </Tooltip>
@@ -101,11 +110,12 @@ function AppLogado() {
       </Box>
 
       {modoDemo && (
-        <Typography variant="caption" component="p" align="center" sx={{ bgcolor: cores.olivaClara, color: 'primary.dark', py: 0.5, px: 2 }}>
+        <Typography variant="caption" component="p" align="center" sx={{ bgcolor: 'tema.suave', color: 'primary.dark', py: 0.5, px: 2 }}>
           Demonstração: as alterações ficam salvas só neste navegador.
         </Typography>
       )}
       <Container maxWidth="md" sx={{ py: 3 }}>
+        <InstalarApp />
         <Routes>
           <Route path="/" element={<Navigate to="/painel" replace />} />
           <Route path="/painel" element={<PainelPage />} />
@@ -119,7 +129,7 @@ function AppLogado() {
 
       <Paper elevation={0} sx={{
         display: { xs: 'block', sm: 'none' }, position: 'fixed', left: 12, right: 12, bottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 10,
-        borderRadius: 999, overflow: 'hidden', boxShadow: '0 8px 30px rgba(74, 63, 68, 0.12)',
+        borderRadius: 999, overflow: 'hidden', boxShadow: `0 8px 30px ${t.sombra}`,
       }}>
         <BottomNavigation showLabels value={abaAtual} onChange={(_, v) => navigate(v)}>
           {abas.map(({ path, label, Icone }) => (

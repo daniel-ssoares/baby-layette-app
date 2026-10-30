@@ -6,6 +6,7 @@ export type OrigemItem = 'Comprado' | 'Ganhado'
 export type SexoBebe = 'NaoInformado' | 'Feminino' | 'Masculino'
 export type Clima = 'Todos' | 'Frio' | 'Calor'
 export type Estacao = 'Verao' | 'Outono' | 'Inverno' | 'Primavera'
+export type TemaVisual = 'Oliveira' | 'Cerejeira' | 'Lavanda' | 'Pessego' | 'Jardim' | 'Ceu' | 'Oceano' | 'Ursinho'
 
 export interface Conta {
   email: string
@@ -21,6 +22,7 @@ export interface Enxoval {
   cidade: string | null
   latitude: number | null
   longitude: number | null
+  tema: TemaVisual
 }
 
 export interface Local {
@@ -38,7 +40,13 @@ export interface PerfilClima {
   precisaFrio: boolean
   precisaCalor: boolean
 }
-export type AtualizarEnxoval = Omit<Enxoval, 'id' | 'boasVindasConcluidas'>
+export type AtualizarEnxoval = Omit<Enxoval, 'id' | 'boasVindasConcluidas' | 'tema'>
+export interface BoasVindas {
+  nomeBebe: string | null
+  dataPrevistaParto: string | null
+  sexo?: SexoBebe
+  tema?: TemaVisual
+}
 
 export interface Categoria {
   id: number

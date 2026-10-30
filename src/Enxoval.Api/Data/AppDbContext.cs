@@ -22,6 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasOne<IdentityUser>().WithMany().HasForeignKey(x => x.UsuarioId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.NomeBebe).HasMaxLength(100);
             e.Property(x => x.Sexo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Tema).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Cidade).HasMaxLength(150);
             e.HasMany(x => x.Categorias).WithOne().HasForeignKey(x => x.EnxovalId);
             e.HasMany(x => x.Itens).WithOne().HasForeignKey(x => x.EnxovalId).OnDelete(DeleteBehavior.NoAction);

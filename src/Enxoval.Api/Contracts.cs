@@ -4,13 +4,14 @@ namespace Enxoval.Api;
 
 public record EnxovalDto(
     int Id, string? NomeBebe, SexoBebe Sexo, DateOnly? DataPrevistaParto, decimal? Orcamento,
-    string? Cidade, double? Latitude, double? Longitude, bool BoasVindasConcluidas);
+    string? Cidade, double? Latitude, double? Longitude, bool BoasVindasConcluidas, TemaVisual Tema);
 public record AtualizarEnxovalRequest(
     string? NomeBebe, SexoBebe Sexo, DateOnly? DataPrevistaParto, decimal? Orcamento,
     string? Cidade, double? Latitude, double? Longitude);
+public record TrocarTemaRequest(TemaVisual Tema);
 
-/// <summary>T2: respostas da tela de boas-vindas (ambas opcionais).</summary>
-public record BoasVindasRequest(string? NomeBebe, DateOnly? DataPrevistaParto);
+/// <summary>T2: respostas da tela de boas-vindas (todas opcionais). O tema precisa estar entre os do sexo informado.</summary>
+public record BoasVindasRequest(string? NomeBebe, DateOnly? DataPrevistaParto, SexoBebe? Sexo = null, TemaVisual? Tema = null);
 
 public record CategoriaDto(int Id, string Nome, int Ordem, int TotalItens);
 public record SalvarCategoriaRequest(string Nome, int Ordem);

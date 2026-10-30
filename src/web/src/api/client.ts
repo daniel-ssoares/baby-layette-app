@@ -1,5 +1,6 @@
 import type {
-  AtualizarEnxoval, Categoria, Conta, Enxoval, Item, Local, Painel, RegistrarCompra, SalvarCategoria, SalvarItem,
+  AtualizarEnxoval, BoasVindas, Categoria, Conta, Enxoval, Item, Local, Painel, RegistrarCompra, SalvarCategoria, SalvarItem,
+  TemaVisual,
 } from './types'
 import { mensagemDeErro } from '../lib/erros'
 
@@ -45,8 +46,8 @@ export const api = {
 
   enxoval: () => request<Enxoval>('GET', '/enxoval'),
   atualizarEnxoval: (d: AtualizarEnxoval) => request<void>('PUT', '/enxoval', d),
-  concluirBoasVindas: (d: { nomeBebe: string | null; dataPrevistaParto: string | null }) =>
-    request<void>('POST', '/enxoval/boas-vindas', d),
+  trocarTema: (tema: TemaVisual) => request<void>('PUT', '/enxoval/tema', { tema }),
+  concluirBoasVindas: (d: BoasVindas) => request<void>('POST', '/enxoval/boas-vindas', d),
 
   categorias: () => request<Categoria[]>('GET', '/categorias'),
   criarCategoria: (d: SalvarCategoria) => request<Categoria>('POST', '/categorias', d),

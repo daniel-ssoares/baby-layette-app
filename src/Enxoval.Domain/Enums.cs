@@ -13,3 +13,6 @@ public enum SexoBebe { NaoInformado, Feminino, Masculino }
 public enum Clima { Todos, Frio, Calor }
 
 public enum Estacao { Verao, Outono, Inverno, Primavera }
+
+/// <summary>Tema visual do app (cores e desenho), escolhido pelo casal.</summary>
+public enum TemaVisual { Oliveira, Cerejeira, Lavanda, Pessego, Jardim, Ceu, Oceano, Ursinho }

@@ -31,7 +31,9 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 
 ### Celular e compras (fase 3)
 - **RF24** — Acesso pelo celular na rede de casa (`npm run dev:celular`) e atalho na tela inicial com o ícone do app.
-  Sem modo offline (service worker exige HTTPS fora de localhost).
+- **RF28** — App instalável (PWA) no Android e iOS pelo site publicado: abre em tela cheia pelo ícone, respeita a área
+  segura do iPhone e abre sem internet (última versão salva; os dados da API continuam exigindo conexão). Faixa
+  "Use como app no celular" com botão Instalar (Android) ou instrução Compartilhar → Adicionar à Tela de Início (iOS).
 - **RF25** — Registrar compra: quantidade, Comprei/Ganhei e valor total pago (sugestão = preço estimado × quantidade).
   Soma ao que já havia; ganho não soma valor nem muda uma origem "Comprado".
 - **RF26** — Modo loja (aba Loja): só o que falta e está na estação, por categoria, essenciais primeiro, com total
@@ -39,6 +41,15 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 
 - **RF27** — Versão de demonstração publicada (sem servidor): mesmas telas e regras, dados só no navegador,
   conta de exemplo com um clique; exportação baixa arquivos de exemplo.
+
+### Aparência
+- **RF29** — Temas visuais: 8 temas (menina: Cerejeira, Lavanda, Pêssego, Jardim; menino: Céu, Oceano, Ursinho;
+  neutro: Oliveira), cada um com cores, desenho próprio e elementos soltos com animação leve (desligada se o aparelho
+  pede menos movimento). Nas boas-vindas o casal informa o sexo e escolhe entre os temas daquele sexo + Oliveira
+  ("ainda não sabemos" mostra todos); a tela muda de cor na hora. Na aba do bebê ("Aparência") pode trocar por
+  qualquer um. O tema vale para o casal em todos os aparelhos e também colore o PDF exportado. Login = Oliveira.
+- **RF30** — Modo escuro: Automático (segue o aparelho), Claro ou Escuro, no botão do cabeçalho ou na aba do bebê;
+  salvo em cada aparelho. Cada tema tem a sua versão escura (fundo tingido, nunca preto puro), com contraste testado.
 
 ### Enxoval
 - **RF05** — Dados do enxoval: nome do bebê, sexo, data prevista do parto e orçamento total (todos opcionais).

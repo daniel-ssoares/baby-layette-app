@@ -28,6 +28,7 @@ public static class DadosDemonstracao
         enxoval.BoasVindasConcluidas = true;
         enxoval.NomeBebe = "Theo";
         enxoval.Sexo = SexoBebe.Masculino;
+        enxoval.Tema = TemaVisual.Ceu;
         enxoval.DataPrevistaParto = hoje.AddDays(150);
         enxoval.Orcamento = 8000;
         enxoval.Cidade = "Curitiba, Paraná";

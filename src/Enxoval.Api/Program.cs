@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Enxoval.Api;
 using Enxoval.Api.Data;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -29,9 +30,14 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>(o =>
         o.Password.RequireNonAlphanumeric = false;
     })
     .AddEntityFrameworkStores<AppDbContext>();
+// Hospedado (Dockerfile): chaves que cifram o cookie de login no volume, senão todo deploy desloga todo mundo.
+if (builder.Configuration["DataProtection:Pasta"] is { } pastaChaves)
+    builder.Services.AddDataProtection().PersistKeysToFileSystem(Directory.CreateDirectory(pastaChaves));
 builder.Services.ConfigureApplicationCookie(o =>
 {
     o.Cookie.Name = "enxoval.auth";
+    // Fora do Development o acesso é sempre HTTPS (o proxy do host repassa em HTTP): cookie só em conexão segura.
+    if (!builder.Environment.IsDevelopment()) o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     o.ExpireTimeSpan = TimeSpan.FromDays(30);
     o.SlidingExpiration = true;
     // API: responder 401/403 em vez de redirecionar para uma página de login.
@@ -51,7 +57,11 @@ await using (var scope = app.Services.CreateAsyncScope())
     if (app.Configuration.GetValue<bool>("Demo:Ativo")) await DadosDemonstracao.GarantirAsync(scope.ServiceProvider);
 }
 
-app.UseExceptionHandler();
+// JSON inválido (ex.: enum desconhecido) é erro do cliente: 400, não 500.
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    StatusCodeSelector = ex => ex is BadHttpRequestException b ? b.StatusCode : StatusCodes.Status500InternalServerError,
+});
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

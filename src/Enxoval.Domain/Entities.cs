@@ -9,6 +9,8 @@ public class EnxovalBebe
     public bool BoasVindasConcluidas { get; set; }
     public string? NomeBebe { get; set; }
     public SexoBebe Sexo { get; set; }
+    /// <summary>Tema visual escolhido pelo casal (boas-vindas ou aba do bebê).</summary>
+    public TemaVisual Tema { get; set; }
     public DateOnly? DataPrevistaParto { get; set; }
     public decimal? Orcamento { get; set; }
 

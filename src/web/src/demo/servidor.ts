@@ -1,8 +1,9 @@
 // Modo demonstração (VITE_DEMO=true): substitui a API interceptando fetch('/api/...') no navegador.
 // Reproduz as rotas de src/Enxoval.Api/Endpoints.cs e AuthEndpoints.cs; os dados ficam no localStorage.
-import type { Local, PerfilClima } from '../api/types'
+import type { Local, PerfilClima, SexoBebe, TemaVisual } from '../api/types'
 import dados from './dados.json'
 import { contaDemo } from './modo'
+import { temasDisponiveis, todosOsTemas } from '../temas/paletas'
 import {
   analisarClima, painel, paraDto, registrarCompra,
   type CategoriaSalva, type EnxovalSalvo, type ItemSalvo, type TemperaturaDiaria,
@@ -52,7 +53,8 @@ function novaConta(senha: string): Conta {
 function novaContaDemo(): Conta {
   const conta = novaConta(contaDemo.senha)
   const { diasParaParto, ...enxoval } = dados.demo.enxoval
-  conta.enxoval = { ...conta.enxoval, ...enxoval, sexo: enxoval.sexo as EnxovalSalvo['sexo'], boasVindasConcluidas: true,
+  conta.enxoval = { ...conta.enxoval, ...enxoval, sexo: enxoval.sexo as EnxovalSalvo['sexo'], tema: enxoval.tema as TemaVisual,
+    boasVindasConcluidas: true,
     dataPrevistaParto: somarDias(hoje(), diasParaParto) }
   for (const c of dados.demo.compras)
     Object.assign(conta.itens[c.indice], { qtdAdquirida: c.qtdAdquirida, valorPago: c.valorPago, origem: c.origem })
@@ -192,7 +194,13 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
   }
 
   // Enxoval
-  if (rota === 'GET /enxoval') return ok({ id: 1, ...e })
+  if (rota === 'GET /enxoval') return ok({ id: 1, tema: 'Oliveira', ...e })
+  if (rota === 'PUT /enxoval/tema') {
+    if (!todosOsTemas.includes(corpo.tema as TemaVisual)) return validacao({ tema: ['Tema inválido.'] })
+    e.tema = corpo.tema as TemaVisual
+    salvar()
+    return ok()
+  }
   if (rota === 'PUT /enxoval') {
     const erros: Record<string, string[]> = {}
     if ((num(corpo.orcamento) ?? 0) < 0) erros.orcamento = ['Não pode ser negativo.']
@@ -206,6 +214,11 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
     return ok()
   }
   if (rota === 'POST /enxoval/boas-vindas') {
+    const sexo = (corpo.sexo as SexoBebe | undefined) ?? null
+    if (corpo.tema && !temasDisponiveis(sexo ?? 'NaoInformado').includes(corpo.tema as TemaVisual))
+      return validacao({ tema: ['Escolha um dos temas oferecidos para o sexo informado.'] })
+    if (sexo) e.sexo = sexo
+    if (corpo.tema) e.tema = corpo.tema as TemaVisual
     e.nomeBebe = limpar(corpo.nomeBebe) ?? e.nomeBebe
     e.dataPrevistaParto = (corpo.dataPrevistaParto as string | null) ?? e.dataPrevistaParto
     e.boasVindasConcluidas = true

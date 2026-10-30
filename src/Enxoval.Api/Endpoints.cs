@@ -36,8 +36,8 @@ public static class Endpoints
             var titulo = Exportacao.Titulo(enxoval);
             var nome = $"lista-de-compras-{hoje:yyyy-MM-dd}.{formato}";
             return formato == "pdf"
-                ? Results.File(Exportacao.Pdf(lista, titulo, hoje), "application/pdf", nome)
-                : Results.File(Exportacao.Excel(lista, titulo),
+                ? Results.File(Exportacao.Pdf(lista, titulo, hoje, enxoval.Tema), "application/pdf", nome)
+                : Results.File(Exportacao.Excel(lista, titulo, enxoval.Tema),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nome);
         }).WithTags("Exportar");
 
@@ -56,7 +56,7 @@ public static class Endpoints
             var id = await atual.IdAsync();
             var e = await db.Enxovais.FindAsync(id);
             return new EnxovalDto(e!.Id, e.NomeBebe, e.Sexo, e.DataPrevistaParto, e.Orcamento, e.Cidade, e.Latitude, e.Longitude,
-                e.BoasVindasConcluidas);
+                e.BoasVindasConcluidas, e.Tema);
         });
 
         g.MapPut("/", async (AtualizarEnxovalRequest r, AppDbContext db, EnxovalAtual atual) =>
@@ -74,11 +74,24 @@ public static class Endpoints
             return Results.NoContent();
         });
 
+        // Aparência (aba do bebê): qualquer um dos temas, independente do sexo.
+        g.MapPut("/tema", async (TrocarTemaRequest r, AppDbContext db, EnxovalAtual atual) =>
+        {
+            if (Validacao.Validar(r) is { } erro) return erro;
+            var e = await db.Enxovais.FindAsync(await atual.IdAsync());
+            e!.Tema = r.Tema;
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
         // T2: o nome é opcional ("ainda não escolhemos"); conclui as boas-vindas de qualquer forma.
         g.MapPost("/boas-vindas", async (BoasVindasRequest r, AppDbContext db, EnxovalAtual atual) =>
         {
+            if (Validacao.Validar(r) is { } erro) return erro;
             var e = await db.Enxovais.FindAsync(await atual.IdAsync());
             e!.NomeBebe = Limpar(r.NomeBebe) ?? e.NomeBebe;
+            if (r.Sexo is { } sexo) e.Sexo = sexo;
+            if (r.Tema is { } tema) e.Tema = tema;
             e.DataPrevistaParto = r.DataPrevistaParto ?? e.DataPrevistaParto;
             e.BoasVindasConcluidas = true;
             await db.SaveChangesAsync();

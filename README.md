@@ -79,6 +79,14 @@ npm --prefix src/web run dev:celular
 Depois acesse `http://<ip-do-computador>:5173` no celular. No menu do navegador, a opção "Adicionar à tela inicial"
 cria um atalho com o ícone do app.
 
+O site publicado é um PWA: no Android aparece o botão **Instalar**; no iPhone, use Compartilhar → **Adicionar à Tela
+de Início**. Ele abre em tela cheia e funciona mesmo com internet ruim.
+
+### Hospedar
+
+A API roda em Docker (`Dockerfile`, com volume em `/dados`) e há um `fly.toml` pronto para o Fly.io. O passo a passo,
+incluindo como ligar o front da Vercel à API, está em [docs/hospedagem.md](docs/hospedagem.md).
+
 ## Testes
 
 ```bash

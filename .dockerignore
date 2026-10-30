@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+src/Enxoval.Api/dados/
+src/web/
+tests/
+docs/
+scripts/
+.git/
