@@ -34,16 +34,20 @@ export const apiHttp = {
     if (e instanceof ApiError && e.status === 401) return null
     throw e
   }),
-  entrar: (email: string, password: string) => request<void>('POST', '/auth/login?useCookies=true', { email, password }),
-  cadastrar: (email: string, password: string) => request<void>('POST', '/auth/register', { email, password }),
+  // `captcha`: token do Turnstile (só o Supabase usa; a demonstração ignora).
+  entrar: (email: string, password: string, _captcha?: string | null) =>
+    request<void>('POST', '/auth/login?useCookies=true', { email, password }),
+  cadastrar: (email: string, password: string, _captcha?: string | null) =>
+    request<void>('POST', '/auth/register', { email, password }),
   sair: () => request<void>('POST', '/auth/sair'),
-  trocarSenha: (oldPassword: string, newPassword: string) =>
+  trocarSenha: (oldPassword: string, newPassword: string, _captcha?: string | null) =>
     request<void>('POST', '/auth/manage/info', { oldPassword, newPassword }),
-  esqueciSenha: (email: string) => request<void>('POST', '/auth/forgotPassword', { email }),
+  esqueciSenha: (email: string, _captcha?: string | null) => request<void>('POST', '/auth/forgotPassword', { email }),
   redefinirSenha: (novaSenha: string) => request<void>('POST', '/auth/redefinir', { novaSenha }),
   membros: () => request<Membro[]>('GET', '/membros'),
   criarConvite: () => request<string>('POST', '/convites'),
   aceitarConvite: (codigo: string) => request<void>('POST', `/convites/${encodeURIComponent(codigo)}/aceitar`),
+  removerMembro: (id: string) => request<void>('DELETE', `/membros/${encodeURIComponent(id)}`),
 
   enxoval: () => request<Enxoval>('GET', '/enxoval'),
   atualizarEnxoval: (d: AtualizarEnxoval) => request<void>('PUT', '/enxoval', d),

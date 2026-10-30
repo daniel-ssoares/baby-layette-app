@@ -9,6 +9,8 @@ import Motivo, { Confetes } from '../temas/Motivo'
 import { fundoDecorado } from '../temas/desenhos'
 import { contaDemo, demoFixa, entrarNaDemo, modoDemo, sairDaDemo } from '../demo/modo'
 import { lerConvite } from '../nuvem/convite'
+import Captcha from '../components/Captcha'
+import { captchaAtivo } from '../lib/captcha'
 
 interface Campos { email: string; senha: string; confirmacao: string }
 
@@ -22,6 +24,9 @@ export default function EntrarPage() {
   const [aviso, setAviso] = useState<string | null>(null)
   const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<Campos>()
 
+  const [captcha, setCaptcha] = useState<string | null>(null)
+  const [versaoCaptcha, setVersaoCaptcha] = useState(0)
+
   const trocarModo = (m: typeof modo) => { setModo(m); setErro(null); setAviso(null) }
 
   const enviar = async ({ email, senha }: Pick<Campos, 'email' | 'senha'>, acao = modo) => {
@@ -29,17 +34,20 @@ export default function EntrarPage() {
     setAviso(null)
     try {
       if (acao === 'esqueci') {
-        await api.esqueciSenha(email)
+        await api.esqueciSenha(email, captcha)
         setAviso(`Se existir uma conta com ${email}, enviamos um link para criar uma nova senha. Confira também o spam.`)
         return
       }
-      if (acao === 'criar') await api.cadastrar(email, senha)
-      await api.entrar(email, senha)
+      if (acao === 'criar') await api.cadastrar(email, senha, captcha)
+      // No Supabase o cadastro já abre a sessão; na demonstração é preciso entrar depois.
+      if (acao === 'entrar' || !(await api.eu())) await api.entrar(email, senha, captcha)
       trocarSessao(qc, await api.eu())
     } catch (e) {
       if (acao === 'criar' && e instanceof ApiError && e.codigos.includes('email_not_confirmed'))
         setAviso(`Conta criada! Enviamos um link de confirmação para ${email}. Depois de confirmar, entre aqui.`)
       else setErro((e as Error).message)
+    } finally {
+      setVersaoCaptcha(v => v + 1) // o token vale uma vez
     }
   }
 
@@ -99,9 +107,10 @@ export default function EntrarPage() {
                 {...register('confirmacao', { validate: v => v === getValues('senha') || 'As senhas não conferem.' })}
                 error={!!errors.confirmacao} helperText={errors.confirmacao?.message} />
             )}
+            {!modoDemo && <Captcha onToken={setCaptcha} versao={versaoCaptcha} />}
             {erro && <Alert severity="error" sx={{ borderRadius: '12px' }}>{erro}</Alert>}
             {aviso && <Alert severity="success" sx={{ borderRadius: '12px' }}>{aviso}</Alert>}
-            <Button type="submit" variant="contained" size="large" loading={isSubmitting}>
+            <Button type="submit" variant="contained" size="large" loading={isSubmitting} disabled={captchaAtivo && !captcha}>
               {{ entrar: 'Entrar', criar: 'Criar conta', esqueci: 'Enviar link' }[modo]}
             </Button>
             {modo === 'entrar' && !modoDemo && (

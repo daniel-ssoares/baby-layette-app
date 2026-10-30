@@ -194,7 +194,9 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
   }
 
   // Casal: na demonstração cada conta é de uma pessoa só.
-  if (rota === 'GET /membros') return ok([{ email: banco.logado, entrouEm: agora(), eu: true }])
+  if (rota === 'GET /membros') return ok([{ id: banco.logado, email: banco.logado, entrouEm: agora(), eu: true }])
+  if (metodo === 'DELETE' && caminho.startsWith('/membros/'))
+    return validacao({ demo: ['Na demonstração cada conta é de uma pessoa só.'] })
   if (rota === 'POST /convites' || /^POST \/convites\/[^/]+\/aceitar$/.test(rota))
     return validacao({ demo: ['Convites funcionam só com conta de verdade (fora da demonstração).'] })
 
@@ -267,7 +269,7 @@ async function tratar(metodo: string, url: URL, corpoBruto: BodyInit | null | un
     } else if (acao === 'PUT foto') {
       const foto = corpoBruto instanceof FormData ? corpoBruto.get('foto') : null
       if (!(foto instanceof Blob)) return validacao({ foto: ['Envie uma foto.'] })
-      if (foto.size > 5 * 1024 * 1024) return validacao({ foto: ['A foto pode ter no máximo 5 MB.'] })
+      if (foto.size > 3 * 1024 * 1024) return validacao({ foto: ['A foto pode ter no máximo 3 MB.'] })
       const anterior = i.fotoUrl
       i.fotoUrl = await lerArquivo(foto)
       if (!salvar()) {

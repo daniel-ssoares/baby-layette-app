@@ -14,6 +14,7 @@ export interface Conta {
 
 /** Pessoa que participa do enxoval (o casal entra por convite). */
 export interface Membro {
+  id: string
   email: string
   entrouEm: string
   eu: boolean

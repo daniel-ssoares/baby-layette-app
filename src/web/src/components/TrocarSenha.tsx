@@ -1,14 +1,19 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material'
 import { api } from '../api/client'
 import { useAcao, useEu } from '../api/hooks'
+import Captcha from './Captcha'
+import { captchaAtivo } from '../lib/captcha'
 
 interface Campos { atual: string; nova: string }
 
 /** T1 (RF04): conta de quem está logado e troca de senha. */
 export default function TrocarSenha() {
   const eu = useEu()
-  const trocar = useAcao(({ atual, nova }: Campos) => api.trocarSenha(atual, nova))
+  const [captcha, setCaptcha] = useState<string | null>(null)
+  const [versao, setVersao] = useState(0)
+  const trocar = useAcao(({ atual, nova }: Campos) => api.trocarSenha(atual, nova, captcha).finally(() => setVersao(v => v + 1)))
   const { register, handleSubmit, reset, formState: { errors } } = useForm<Campos>()
 
   return (
@@ -23,8 +28,9 @@ export default function TrocarSenha() {
           {...register('nova', { required: 'Informe a nova senha.', minLength: { value: 8, message: 'Mínimo de 8 caracteres.' } })}
           error={!!errors.nova} helperText={errors.nova?.message} />
       </Stack>
+      <Captcha onToken={setCaptcha} versao={versao} />
       {trocar.isSuccess && <Alert severity="success" sx={{ borderRadius: '12px' }}>Senha alterada.</Alert>}
-      <Button type="submit" variant="outlined" loading={trocar.isPending} sx={{ alignSelf: 'flex-start' }}>
+      <Button type="submit" variant="outlined" loading={trocar.isPending} disabled={captchaAtivo && !captcha} sx={{ alignSelf: 'flex-start' }}>
         Trocar senha
       </Button>
     </Stack>

@@ -140,6 +140,10 @@ declare
   cod text;
 begin
   if eid is null then raise exception 'Entre na sua conta.' using errcode = '28000'; end if;
+  if (select count(*) from public.convites
+      where enxoval_id = eid and usado_por is null and expira_em > now()) >= 10 then
+    raise exception 'Há convites demais em aberto. Use um dos que já foram gerados ou espere vencerem.' using errcode = 'P0001';
+  end if;
   -- 10 caracteres sem 0/O/1/I para ditar sem confusão.
   cod := translate(upper(left(replace(gen_random_uuid()::text, '-', ''), 10)), '01', '89');
   insert into public.convites (codigo, enxoval_id, criado_por) values (cod, eid, auth.uid());
@@ -147,7 +151,9 @@ begin
 end $$;
 
 -- Entra no enxoval do convite. Quem já tinha um enxoval só seu (sem outra pessoa) o perde: a tela avisa antes.
-create or replace function public.aceitar_convite(p_codigo text) returns bigint
+-- p_so_verificar: confere o convite sem mudar nada (o app apaga as fotos do enxoval antigo antes de aceitar de fato).
+drop function if exists public.aceitar_convite(text);
+create or replace function public.aceitar_convite(p_codigo text, p_so_verificar boolean default false) returns bigint
 language plpgsql security definer set search_path = '' as $$
 declare
   c public.convites;
@@ -159,21 +165,66 @@ begin
     raise exception 'Convite inválido, já usado ou vencido. Peça um novo código.' using errcode = 'P0001';
   end if;
   if atual = c.enxoval_id then return atual; end if;
-  if atual is not null then
-    if exists (select 1 from public.membros where enxoval_id = atual and usuario_id <> auth.uid()) then
-      raise exception 'Você já participa de um enxoval com outra pessoa.' using errcode = 'P0001';
-    end if;
-    delete from public.enxovais where id = atual; -- membros/categorias/itens em cascata
+  if atual is not null and exists (select 1 from public.membros where enxoval_id = atual and usuario_id <> auth.uid()) then
+    raise exception 'Você já participa de um enxoval com outra pessoa.' using errcode = 'P0001';
   end if;
+  if p_so_verificar then return c.enxoval_id; end if;
+  if atual is not null then delete from public.enxovais where id = atual; end if; -- membros/categorias/itens em cascata
   insert into public.membros (usuario_id, enxoval_id, email) values (auth.uid(), c.enxoval_id, coalesce(auth.jwt() ->> 'email', ''));
   update public.convites set usado_por = auth.uid() where codigo = c.codigo;
   return c.enxoval_id;
 end $$;
 
-revoke execute on function public.meu_enxoval(), public.garantir_enxoval(), public.criar_convite(), public.aceitar_convite(text)
-  from public, anon;
-grant execute on function public.meu_enxoval(), public.garantir_enxoval(), public.criar_convite(), public.aceitar_convite(text)
-  to authenticated;
+-- Tira outra pessoa do enxoval (ex.: link de convite que vazou). Também cancela os convites ainda não usados.
+-- A pessoa removida começa um enxoval novo no próximo acesso.
+create or replace function public.remover_membro(p_usuario uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  eid bigint := public.meu_enxoval();
+begin
+  if eid is null then raise exception 'Entre na sua conta.' using errcode = '28000'; end if;
+  if p_usuario = auth.uid() then
+    raise exception 'Você não pode se remover. Peça para a outra pessoa remover você.' using errcode = 'P0001';
+  end if;
+  delete from public.membros where usuario_id = p_usuario and enxoval_id = eid;
+  if not found then raise exception 'Essa pessoa não participa deste enxoval.' using errcode = 'P0001'; end if;
+  delete from public.convites where enxoval_id = eid and usado_por is null;
+end $$;
+
+-- ---- Limites contra abuso (o plano gratuito tem ~500 MB de banco e 1 GB de arquivos para todo mundo) ----
+
+create or replace function public.limitar_linhas() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  total int;
+begin
+  if tg_table_name = 'itens' then
+    select count(*) into total from public.itens where enxoval_id = new.enxoval_id;
+    if total >= 1000 then raise exception 'Limite de 1000 itens por enxoval.' using errcode = 'P0001'; end if;
+  else
+    select count(*) into total from public.categorias where enxoval_id = new.enxoval_id;
+    if total >= 100 then raise exception 'Limite de 100 categorias por enxoval.' using errcode = 'P0001'; end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists itens_limite on public.itens;
+create trigger itens_limite before insert on public.itens for each row execute function public.limitar_linhas();
+drop trigger if exists categorias_limite on public.categorias;
+create trigger categorias_limite before insert on public.categorias for each row execute function public.limitar_linhas();
+
+-- Fotos do enxoval de quem está logado ainda cabem? (até 200 arquivos e 150 MB por enxoval)
+create or replace function public.cabe_mais_foto() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select count(*) < 200 and coalesce(sum((o.metadata ->> 'size')::bigint), 0) < 150 * 1024 * 1024
+  from storage.objects o
+  where o.bucket_id = 'fotos' and (storage.foldername(o.name))[1] = public.meu_enxoval()::text
+$$;
+
+revoke execute on function public.meu_enxoval(), public.garantir_enxoval(), public.criar_convite(), public.aceitar_convite(text, boolean),
+  public.remover_membro(uuid), public.cabe_mais_foto() from public, anon;
+grant execute on function public.meu_enxoval(), public.garantir_enxoval(), public.criar_convite(), public.aceitar_convite(text, boolean),
+  public.remover_membro(uuid), public.cabe_mais_foto() to authenticated;
+revoke execute on function public.limitar_linhas(), public.tocar_item() from public, anon, authenticated;
 
 -- ============ Regras de acesso (RLS) ============
 
@@ -216,7 +267,7 @@ create policy "ler lista-padrão" on public.lista_padrao_itens for select to aut
 -- Bucket privado; cada arquivo fica numa pasta com o id do enxoval e só os membros dele acessam.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('fotos', 'fotos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+values ('fotos', 'fotos', false, 3145728, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
@@ -225,7 +276,7 @@ create policy "fotos do enxoval: ver" on storage.objects for select to authentic
   using (bucket_id = 'fotos' and (storage.foldername(name))[1] = public.meu_enxoval()::text);
 drop policy if exists "fotos do enxoval: enviar" on storage.objects;
 create policy "fotos do enxoval: enviar" on storage.objects for insert to authenticated
-  with check (bucket_id = 'fotos' and (storage.foldername(name))[1] = public.meu_enxoval()::text);
+  with check (bucket_id = 'fotos' and (storage.foldername(name))[1] = public.meu_enxoval()::text and public.cabe_mais_foto());
 drop policy if exists "fotos do enxoval: trocar" on storage.objects;
 create policy "fotos do enxoval: trocar" on storage.objects for update to authenticated
   using (bucket_id = 'fotos' and (storage.foldername(name))[1] = public.meu_enxoval()::text);

@@ -1,9 +1,13 @@
 import { useState } from 'react'
-import { Alert, Box, Button, Chip, Stack, TextField, Typography } from '@mui/material'
+import {
+  Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography,
+} from '@mui/material'
 import PersonAddIcon from '@mui/icons-material/PersonAddAlt1Outlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopyOutlined'
+import CancelIcon from '@mui/icons-material/Cancel'
 import { api } from '../api/client'
-import { useMembros } from '../api/hooks'
+import { useAcao, useMembros } from '../api/hooks'
+import type { Membro } from '../api/types'
 import { useMutation } from '@tanstack/react-query'
 import { linkDeConvite, normalizarConvite } from '../nuvem/convite'
 import AceitarConvite from './AceitarConvite'
@@ -15,6 +19,8 @@ export default function Casal() {
   const [copiado, setCopiado] = useState(false)
   const [codigoDigitado, setCodigoDigitado] = useState('')
   const [confirmar, setConfirmar] = useState<string | null>(null)
+  const [removendo, setRemovendo] = useState<Membro | null>(null)
+  const remover = useAcao(api.removerMembro)
   const codigo = convidar.data
   const link = codigo ? linkDeConvite(codigo) : ''
 
@@ -28,7 +34,9 @@ export default function Casal() {
     <Stack spacing={2}>
       <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
         {membros.data?.map(m => (
-          <Chip key={m.email} label={m.eu ? `${m.email} (você)` : m.email} color={m.eu ? 'default' : 'primary'} variant={m.eu ? 'outlined' : 'filled'} />
+          <Chip key={m.id} label={m.eu ? `${m.email} (você)` : m.email} color={m.eu ? 'default' : 'primary'} variant={m.eu ? 'outlined' : 'filled'}
+            onDelete={m.eu ? undefined : () => setRemovendo(m)} sx={{ maxWidth: '100%' }}
+            deleteIcon={<CancelIcon aria-label={`Remover ${m.email}`} />} />
         ))}
       </Stack>
       {membros.data?.length === 1 && (
@@ -63,6 +71,21 @@ export default function Casal() {
           onChange={e => setCodigoDigitado(e.target.value)} slotProps={{ htmlInput: { maxLength: 14 } }} sx={{ flex: 1 }} />
         <Button type="submit" variant="text" disabled={!normalizarConvite(codigoDigitado)}>Participar</Button>
       </Box>
+
+      <Dialog open={!!removendo} onClose={() => !remover.isPending && setRemovendo(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Remover do enxoval?</DialogTitle>
+        <DialogContent>
+          <Typography><b>{removendo?.email}</b> deixa de ver e editar este enxoval. Os convites ainda não usados também são
+            cancelados.</Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button color="inherit" onClick={() => setRemovendo(null)} disabled={remover.isPending}>Cancelar</Button>
+          <Button color="error" variant="contained" loading={remover.isPending}
+            onClick={() => removendo && remover.mutate(removendo.id, { onSuccess: () => { setRemovendo(null); convidar.reset() } })}>
+            Remover
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <AceitarConvite codigo={confirmar} onFechar={aceito => { setConfirmar(null); if (aceito) setCodigoDigitado('') }} />
     </Stack>

@@ -25,11 +25,15 @@ O enxoval de cada conta nova já vem pré-carregado com a lista de [lista-enxova
 - **RF04** — Alterar a senha (pede a atual) e "Esqueci minha senha" (link por e-mail para criar uma nova).
 - **RF31** — Convite do casal: na aba do bebê ("Quem participa"), gerar um link/código de uso único, válido por 7 dias.
   Quem abre o link cria a conta (ou entra) e passa a ver e editar o mesmo enxoval. Quem já tinha um enxoval só seu é
-  avisado de que ele será apagado ao aceitar. A lista mostra os e-mails de quem participa.
+  avisado de que ele será apagado ao aceitar (com as fotos). A lista mostra os e-mails de quem participa; qualquer
+  participante pode remover outro (ex.: link vazado), o que também cancela os convites em aberto.
+- **RNF — Segurança:** dados separados por enxoval no banco (RLS); CAPTCHA (Cloudflare Turnstile) em cadastro, login e
+  recuperação de senha quando configurado; limites por enxoval (1000 itens, 100 categorias, 10 convites abertos,
+  200 fotos/150 MB); cabeçalhos de segurança no site (CSP, sem iframe de terceiros, nosniff, HSTS).
 - **RF21** — Boas-vindas após o primeiro acesso: nome do bebê e data prevista, ambos opcionais ("Ainda não escolhemos o nome").
 
 ### Fotos e exportação (fase 2)
-- **RF22** — Foto por item (JPEG/PNG/WebP, até 5 MB; o navegador reduz para ≤ 1600px antes de enviar), com
+- **RF22** — Foto por item (JPEG/PNG/WebP, até 3 MB; o navegador reduz para ≤ 1600px antes de enviar), com
   miniatura na lista. Arquivos no Supabase Storage (bucket privado), visíveis só para quem participa do enxoval.
 - **RF23** — Exportar a lista de compras (o que falta, dentro da estação) ou a lista completa, em PDF ou Excel,
   gerados no navegador nas cores do tema.

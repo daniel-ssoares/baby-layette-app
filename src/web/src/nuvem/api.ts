@@ -45,6 +45,7 @@ const mensagensAuth: Record<string, [string, number]> = {
   over_email_send_rate_limit: ['Muitos e-mails enviados agora. Aguarde alguns minutos e tente de novo.', 429],
   over_request_rate_limit: ['Muitas tentativas. Aguarde alguns minutos e tente de novo.', 429],
   same_password: ['A nova senha precisa ser diferente da atual.', 400],
+  captcha_failed: ['Confirme a verificação anti-robô e tente de novo.', 400],
 }
 
 function erroAuth(e: AuthError): ApiError {
@@ -189,6 +190,13 @@ async function alterarQuantidade(id: number, nova: (atual: LinhaItem) => number)
   return gravarItem(id, { qtd_adquirida: nova(atual), origem: atual.origem ?? 'Comprado' })
 }
 
+/** Apaga todas as fotos de um enxoval (antes de ele ser substituído pelo de um convite). */
+async function apagarFotosDoEnxoval(enxoval: number) {
+  const { data } = await supabase().storage.from('fotos').list(String(enxoval), { limit: 1000 })
+  const caminhos = (data ?? []).map(f => `${enxoval}/${f.name}`)
+  if (caminhos.length) await supabase().storage.from('fotos').remove(caminhos)
+}
+
 const extensao: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 export const apiNuvem: Api = {
@@ -197,30 +205,42 @@ export const apiNuvem: Api = {
     const { data } = await supabase().auth.getSession()
     return data.session ? { email: data.session.user.email ?? '' } : null
   },
-  entrar: async (email, senha) => {
+  entrar: async (email, senha, captcha) => {
     esquecerEnxoval()
-    const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password: senha })
+    const { error } = await supabase().auth.signInWithPassword({
+      email: email.trim(), password: senha, options: { captchaToken: captcha ?? undefined },
+    })
     if (error) throw erroAuth(error)
   },
-  cadastrar: async (email, senha) => {
-    const { error } = await supabase().auth.signUp({ email: email.trim(), password: senha, options: { emailRedirectTo: location.origin } })
+  // Com "Confirm email" desligado o cadastro já abre a sessão; ligado, avisa para confirmar (o token do CAPTCHA
+  // vale uma vez, então não dá para emendar um login aqui).
+  cadastrar: async (email, senha, captcha) => {
+    const { data, error } = await supabase().auth.signUp({
+      email: email.trim(), password: senha, options: { emailRedirectTo: location.origin, captchaToken: captcha ?? undefined },
+    })
     if (error) throw erroAuth(error)
+    if (!data.session) throw new ApiError('Confirme o e-mail pelo link que enviamos antes de entrar.', 400, ['email_not_confirmed'])
   },
   sair: async () => {
     esquecerEnxoval()
     urlsFoto.clear()
     await supabase().auth.signOut()
   },
-  trocarSenha: async (atual, nova) => {
+  trocarSenha: async (atual, nova, captcha) => {
     const sessao = await exigirSessao()
     // Confere a senha atual antes de trocar (o Supabase troca só com a sessão).
-    const conferida = await supabase().auth.signInWithPassword({ email: sessao.user.email ?? '', password: atual })
+    const conferida = await supabase().auth.signInWithPassword({
+      email: sessao.user.email ?? '', password: atual, options: { captchaToken: captcha ?? undefined },
+    })
+    if (conferida.error?.code === 'captcha_failed') throw erroAuth(conferida.error)
     if (conferida.error) throw new ApiError('Senha atual incorreta.', 400, ['PasswordMismatch'])
     const { error } = await supabase().auth.updateUser({ password: nova })
     if (error) throw erroAuth(error)
   },
-  esqueciSenha: async email => {
-    const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo: `${location.origin}/redefinir-senha` })
+  esqueciSenha: async (email, captcha) => {
+    const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${location.origin}/redefinir-senha`, captchaToken: captcha ?? undefined,
+    })
     if (error) throw erroAuth(error)
   },
   redefinirSenha: async nova => {
@@ -233,7 +253,7 @@ export const apiNuvem: Api = {
     const [sessao, id] = await Promise.all([exigirSessao(), meuEnxovalId()])
     const linhas = dados(await supabase().from('membros').select('usuario_id, email, entrou_em').eq('enxoval_id', id).order('entrou_em'))
     return (linhas as { usuario_id: string; email: string; entrou_em: string }[])
-      .map((m): Membro => ({ email: m.email, entrouEm: m.entrou_em, eu: m.usuario_id === sessao.user.id }))
+      .map((m): Membro => ({ id: m.usuario_id, email: m.email, entrouEm: m.entrou_em, eu: m.usuario_id === sessao.user.id }))
   },
   criarConvite: async () => {
     await meuEnxovalId()
@@ -241,9 +261,17 @@ export const apiNuvem: Api = {
   },
   aceitarConvite: async codigo => {
     await exigirSessao()
+    const anterior = await meuEnxovalId()
+    // Confere antes: se valer, o enxoval atual será apagado — e as fotos dele só saem pela API do Storage, enquanto
+    // a pessoa ainda tem acesso à pasta (depois de aceitar já não tem).
+    const destino = dados(await supabase().rpc('aceitar_convite', { p_codigo: codigo, p_so_verificar: true })) as number
+    if (destino !== anterior) await apagarFotosDoEnxoval(anterior)
     dados(await supabase().rpc('aceitar_convite', { p_codigo: codigo }))
     esquecerConvite()
     esquecerEnxoval()
+  },
+  removerMembro: async id => {
+    dados(await supabase().rpc('remover_membro', { p_usuario: id }))
   },
 
   // ---- Enxoval ----
@@ -327,7 +355,7 @@ export const apiNuvem: Api = {
   enviarFoto: async (id, foto) => {
     const ext = extensao[foto.type]
     if (!ext) throw new ApiError('Envie uma foto JPEG, PNG ou WebP.', 400, ['foto'])
-    if (foto.size > 5 * 1024 * 1024) throw new ApiError('A foto pode ter no máximo 5 MB.', 400, ['foto'])
+    if (foto.size > 3 * 1024 * 1024) throw new ApiError('A foto pode ter no máximo 3 MB.', 400, ['foto'])
     const [enxoval, anterior] = await Promise.all([meuEnxovalId(), lerItem(id)])
     const caminho = `${enxoval}/${id}-${Date.now()}.${ext}`
     const envio = await supabase().storage.from('fotos').upload(caminho, foto, { contentType: foto.type })
